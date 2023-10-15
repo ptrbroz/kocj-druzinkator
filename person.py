@@ -1,11 +1,11 @@
-
+import numpy as np
 
 class Person:
     """
-    Ocejak vulgaris taboritae. Holds a name, assigned company (if any) and a list of attributes (eg.: jokerit, matfyz, ...)
+    Ocejak vulgaris taboritae. 
     """
 
-    def __init__(self, name, *atributes):
+    def __init__(self, name, *atributes, presence = None):
         """
         Params:
         ---------
@@ -14,13 +14,19 @@ class Person:
         *atributes: either string or (string, value)
             optional. Initialises supplied attribute names to 1.
             Alternatively, if an attribute is supplied in the form of a tuple, it is initialized to the value of the second element.
-
+        presence : numpy array of 1s and 0s, length = 14
+            optional (defaults to ones). 1 -> person is present on that day, 0-> not present
         Example:
             j = Person("Jan Tleskač", "jokerit", ("matfyz", 0.2), )
             
         """
         self.name = name
         self.company = None
+        if presence is None:
+            presence = np.ones(14)
+        elif len(presence) != 14:
+            raise Exception(f"Wrong length of supplied presence vector. Wanted 14, got {len(presence)}")
+        self.presence = presence
         self.dict = {}
 
         for a in atributes:
