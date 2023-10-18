@@ -65,23 +65,31 @@ def optimize():
 
     m = model.addMVar(shape=(4,personCount), vtype=GRB.BINARY, name="membership")    #membership of persons in companies. Main decision variable
 
+    #   MEMBERSHIP
+    msums = np.ones((1, 4)) @ m
+    #add constaraint: each person is a member of exactly one company
+    model.addConstr(msums == np.ones((1,personCount)))
+
     #   MANPOWER
-    aem = model.addMVar(shape=(4,14), name="absolute_error_membership")              #absolute error from optimal manpower 
+    aem = model.addMVar(shape=(4,14), name="absolute_error_manpower")              #absolute error from optimal manpower 
     reps_temp = [0]*DIM.shape[0]
     reps_temp[0] = 4
 
-    #add constraint: aem = |manpower - optimal_manpower|
+    manpower = m @ DPM
+    ideal_manpower = np.tile(DIM[1,:], (4,1))
+    manpower_error = manpower - ideal_manpower
+
+    #add constraint: aem = |manpower - ideal manpower|
     for compI in range(4):
         for day in range(14):
-            thisDayManpower = m[compI,:] @ DPM[:, day]
-            diff = thisDayManpower - DIM[0, day]
-            model.addLConstr( diff, GRB.LESS_EQUAL, aem[compI, day])
-            model.addLConstr(-diff, GRB.LESS_EQUAL, aem[compI, day])
+            model.addConstr(    manpower_error[compI, day] <= aem[compI, day])
+            model.addConstr(-1* manpower_error[compI, day] <= aem[compI, day])
 
 
+    model.setObjective(np.ones((1, 4)) @ aem @ np.ones((14, 1)))
+    model.optimize()
 
-
-
+    model.printAttr('x')
 
 
 
