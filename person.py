@@ -21,7 +21,6 @@ class Person:
             
         """
         self.name = name
-        self.company = None
         if presence is None:
             presence = np.ones(14)
         elif len(presence) != 14:

@@ -30,6 +30,40 @@ def dailySumMatrix(personList : List[Person], attributeList):
                     dsm[1+i, day] += p.get(attribute)*pres
     return dsm
 
+def calculateMatrices(personList : List[Person], attributeList : List[str]):
+    """
+    arguments:
+    personList : list of all people
+    attributeList : list of strings. Specified attribtes to be taken into account.
+    ---------------
+    returns:
+    DPM : matrix, len(personList) by 14. Daily presence matrix. Contains 1 if person is present on that day, 0 if not.
+    DSM : matrix, 1+len(attributeList) by 14. Daily sum matrix. First row contains sums of people present on that day, following
+        rows contain sums of attributes present on that day.
+    DAM_list : List of len(attributeList) matrices. Each matrix within list has same dimensions as DPM, but each row is multiplied
+        by that person's value of corresponding attribute.
+    """
+
+    DSM = np.zeros((1+len(attributeList), 14))
+
+    vl = []
+    for p in personList:
+        vl.append([p.presence])
+        DSM[0,:] += p.presence
+    DPM = np.block(vl)
+
+    DAM_list = []
+    for attr in attributeList:
+        DAM = DPM.copy()
+        DAM_list.append(DAM)
+        for i,p in enumerate(personList):
+            aval = p.get(attr)
+            DAM[i, :] *= aval
+
+    return DPM, DSM, DAM_list
+
+
+
 def dailyPresenceMatrix(personList : list[Person]):
     """
     returns a  len(personList) by 14 matrix whose rows are person presence vectors. 
@@ -53,20 +87,23 @@ def optimize():
     pe = Person("Emil", "jokerit", "matfyz", "pěstební dělník", presence=np.block([np.zeros(2), np.ones(12)]))
     pf = Person("Fiona", presence=np.block([np.ones(4), np.ones(6), np.zeros(4)]))
 
-    tabor = [pa, pb, pc, pd, pe, pf]
+    tabor = [pa, pb, pc, pd, pe, pf] 
+    attributeList = ["jokerit", "matfyz"]
+    defaultVector = np.append([0], np.ones(13))
+    weighVectorList = [defaultVector.copy(), defaultVector.copy(), defaultVector.copy()]
 
     personCount = len(tabor)
 
-    DSM = dailySumMatrix(tabor, ["jokerit", "matfyz"])
+    DSM = dailySumMatrix(tabor, attributeList)
     DIM = DSM/4 #daily ideal matrix. Holds ideal ammount of people and attributes per company per day
     DPM = dailyPresenceMatrix(tabor)
 
     model = gp.Model("druzinky")
 
-    m = model.addMVar(shape=(4,personCount), vtype=GRB.BINARY, name="membership")    #membership of persons in companies. Main decision variable
+    M = model.addMVar(shape=(4,personCount), vtype=GRB.BINARY, name="membership")    #membership of persons in companies. Main decision variable
 
     #   MEMBERSHIP
-    msums = np.ones((1, 4)) @ m
+    msums = np.ones((1, 4)) @ M
     #add constaraint: each person is a member of exactly one company
     model.addConstr(msums == np.ones((1,personCount)))
 
@@ -75,7 +112,7 @@ def optimize():
     reps_temp = [0]*DIM.shape[0]
     reps_temp[0] = 4
 
-    manpower = m @ DPM
+    manpower = M @ DPM
     ideal_manpower = np.tile(DIM[1,:], (4,1))
     manpower_error = manpower - ideal_manpower
 
@@ -86,11 +123,21 @@ def optimize():
             model.addConstr(-1* manpower_error[compI, day] <= aem[compI, day])
 
 
+    for attribute in attributeList:
+        #build DAM - daily attribute matrix. Same as DPM, but ones are only present if person is present AND has attribute.
+        #if a person's attribute value is fractional, so are the elements in DAM
+        DAM = DPM.copy()
+        for compI in range(4):
+            for day in range(14):
+
+
+
+
+
+
+
     model.setObjective(np.ones((1, 4)) @ aem @ np.ones((14, 1)))
     model.optimize()
-
-    model.printAttr('x')
-
 
 
 
