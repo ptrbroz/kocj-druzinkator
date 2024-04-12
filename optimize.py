@@ -1,6 +1,6 @@
 from dataObjects import Person, Assignment
 from visualize import visualizeAssignment
-from matrixUtils import calculateDailyMatrices
+from matrixUtils import *
 
 import numpy as np
 import scipy.sparse as sp
@@ -14,14 +14,20 @@ def optimize():
     TODO: add arguments and describe
     """
 
-    pa = Person("Ales", "jokerit", "matfyz")
-    pb = Person("Bara", "matfyz", presence = np.block([np.ones(7), np.zeros(7)]))
-    pc = Person("Cyril", "jokerit", presence= np.block([np.zeros(3), np.ones(5), np.zeros(6)]))
-    pd = Person("Debil", "jokerit", presence=np.block([np.zeros(7), np.ones(7)]))
-    pe = Person("Emil", "jokerit", "matfyz", "pěstební dělník", presence=np.block([np.zeros(2), np.ones(12)]))
-    pf = Person("Fiona", presence=np.block([np.ones(4), np.ones(6), np.zeros(4)]))
 
-    personList = [pa, pb, pc, pd, pe, pf] 
+    h1 = Person("Petr Brož", "jokerit", "matfyz", presence = np.array([1]*10 + [0]*4))
+    h2 = Person("Jan Macháň", "jokerit", "matfyz")
+    h3 = Person("Kateřina Bímová", presence = np.array([0]*2 + [1]*12))
+    h4 = Person("Matěj Břeň", "jokerit")
+    h5 = Person("Eliška Byrtusová")
+    h6 = Person("Kateřina Čížková", "matfyz", presence = np.array([0]*7 + [1]*7))
+    h7 = Person("David Pokorný", "jokerit")
+    h8 = Person("Eliška Jača", "matfyz")
+    h9 = Person("Nováček první", "jokerit", presence = np.array([0]*4 + [1]*4 + [0]*6))
+    h10 = Person("Nováček druhý")
+
+    personList = [h1, h2, h3, h4, h5, h6, h7, h8, h9, h10]
+
     attributeList = ["human", "jokerit", "matfyz"]
 
     defaultVector = np.append([0], np.ones(13))
@@ -30,6 +36,9 @@ def optimize():
     personCount = len(personList)
 
 
+    penaltyVector = np.array([15, 7, 3])
+
+    CCPM = vojtaToCoCoPenaltyMatrix("tabory_ucastnici.xlsx", personList, penaltyVector)
 
 
 
@@ -77,13 +86,13 @@ def optimize():
         expression += np.ones((1,4)) @ AAEM @ weightsList[i]
 
     model.setObjective(expression)
-
+    model.setParam('OutputFlag', False)
     model.optimize()
 
 
     result = Assignment(personList, MM.x)
 
-    visualizeAssignment(result, ["human"])
+    visualizeAssignment(result, attributeList)
 
 
 

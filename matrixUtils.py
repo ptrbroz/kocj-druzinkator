@@ -131,7 +131,7 @@ def vojtaToCoCoPenaltyMatrix(filename, personList : List[Person], penaltyVector 
         if value is None:
             assumedNewbies.append(person.name)
 
-    log.info(f"Following persons did NOT match anyone in Vojta's database:  {assumedNewbies}")
+    print(f"Following persons did NOT match anyone in Vojta's database:  {assumedNewbies}")
 
     CCPM = np.zeros((len(personList), len(personList)))
 

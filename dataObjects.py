@@ -65,7 +65,8 @@ class Person:
 
 class Assignment:
 
-    companies : List[List[Person]] = []
+    companies : List[List[Person]]
+    personList : List[Person]
 
     def __init__(self, personList : List[Person], membershipMatrix : np.matrix) -> None:
         """
@@ -82,6 +83,7 @@ class Assignment:
 
         self.dict = {}
 
+        self.companies = []
         for i in range(4):
             companyList = []
             self.companies.append(companyList)
