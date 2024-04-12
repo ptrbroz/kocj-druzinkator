@@ -156,6 +156,8 @@ def vojtaToCoCoPenaltyMatrix(filename, personList : List[Person], penaltyVector 
                     penalty += p
                 hIndex -= 1         #let's just assume nobody will look far enough into the past for this to fail
 
+            CCPM[i,j] = penalty
+
     return CCPM
 
 
@@ -208,12 +210,14 @@ if __name__ == "__main__":
     pb = Person("Petr Brož")
     kb = Person("Kateřina Bímová")
     kbr = Person("Kateřina Brůžková")
+    nz = Person("Nováček Zmatený")
+    jm = Person("Jan Macháň")
      
-    personList = [pb, kb, kbr]
+    personList = [pb, kb, kbr, nz, jm]
 
-    CCPM = vojtaToCoCoPenaltyMatrix("tabory_ucastnici.xlsx", personList, np.array([10, 5, 2, 1]))
+    CCPM = vojtaToCoCoPenaltyMatrix("tabory_ucastnici.xlsx", personList, np.array([10, 5, 2, 1, 0.1]))
 
-
+    print(CCPM)
 
 
 
