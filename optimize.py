@@ -92,7 +92,7 @@ def optimize():
 
     result = Assignment(personList, MM.x)
 
-    visualizeAssignment(result, attributeList)
+    visualizeAssignment(result, attributeList, CCPM)
 
 
 

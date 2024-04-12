@@ -90,7 +90,7 @@ class Assignment:
             for j, person in enumerate(personList):
                 if(membershipMatrix[i,j]):
                     companyList.append(person)
-                self.dict[person.name] = i
+                    self.dict[person.name] = i
 
     def getCompanyByName(self, personName : str) -> int:
         """
