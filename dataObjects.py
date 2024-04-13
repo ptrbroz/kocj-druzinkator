@@ -67,17 +67,20 @@ class Assignment:
 
     companies : List[List[Person]]
     personList : List[Person]
+    SCM : np.matrix
 
-    def __init__(self, personList : List[Person], membershipMatrix : np.matrix) -> None:
+    def __init__(self, personList : List[Person], membershipMatrix : np.matrix, sharedCompanyMatrix: np.matrix) -> None:
         """
         Params:
         ---------
         personList : list of all persons
         membershipMatrix : 4 by len(personList) numpy matrix.  Each column must have exactly one element equal to 1 and rest zeroes.
                 Describes assignment of persons into companies.
+        sharedCompanyMatrix : len(personList) by len(personList) matrix.  Element at i,j is 1 if ith and jth person share company, 0 otherwise. Optional
         """
         self.personList = personList
         self.membershipMatrix = membershipMatrix
+        self.SCM = sharedCompanyMatrix
 
         #prepare lists of companies and dictionary for membership lookup
 

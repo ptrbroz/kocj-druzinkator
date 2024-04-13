@@ -85,7 +85,8 @@ def visualizeAssignment(assignment : Assignment, attributeList : List[str], CCPM
             
             #print(f"{p1.name} x {p2.name} -> {assignment.getCompanyByName(p1.name)} vs {assignment.getCompanyByName(p2.name)}")
 
-            sharedCompany = (assignment.getCompanyByName(p1.name) == assignment.getCompanyByName(p2.name))
+            #sharedCompany = (assignment.getCompanyByName(p1.name) == assignment.getCompanyByName(p2.name))
+            sharedCompany = assignment.SCM[i,j]
             
             if sharedCompany:
                 intersectionDays = np.sum(p1.presence * p2.presence)
@@ -97,9 +98,10 @@ def visualizeAssignment(assignment : Assignment, attributeList : List[str], CCPM
             color = 'white'
             if sharedCompany:
                 if ccp > 0:
+                    #maybe todo: pass twice and change red hue dep. on severity?
                     color = (1, 0.5, 0.5)
                 else:
-                    color = (0.8, 1, 0.9)
+                    color = (0.8, 1, 0.7)
 
             ax.text(j+0.5, i+0.5, textVal, va='center', ha='center', color='black', clip_on = True)
             ax.fill_between([j, j+1], i, i+1, color=color)
