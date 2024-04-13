@@ -1,15 +1,11 @@
-
-from pyscipopt import Model
-import pyscipopt
-
 from dataObjects import Person, Assignment
 from visualize import visualizeAssignment
 from matrixUtils import *
 
-
 import numpy as np
 import scipy.sparse as sp
-
+import gurobipy as gp
+from gurobipy import GRB
 
 from typing import List
 
@@ -44,30 +40,22 @@ def optimize():
 
     CCPM = vojtaToCoCoPenaltyMatrix("tabory_ucastnici.xlsx", personList, penaltyVector)
 
-    
+
+
+
+
     DSM, DAM_list = calculateDailyMatrices(personList, attributeList)
     DIM = DSM/4 #daily ideal matrix. Holds ideal ammount of people and attributes per company per day
 
     print(DSM)
 
-    model = Model("companies")
-
-
+    model = gp.Model("companies")
 
     #   MEMBERSHIP
-    MM = np.empty((4, personCount), dtype= pyscipopt.Variable)
-    for i in range(4):
-        for j in range(personCount):
-            MM[i,j] = model.addVar(name = f"Membership_{i}_{j}", vtype = 'B')
-
+    MM = model.addMVar(shape=(4,personCount), vtype=GRB.BINARY, name="membership")    #membership matrix of persons in companies. Main decision variable
     #add constaraint: each person is a member of exactly one company
-    print(MM)
     msums = np.ones((1, 4)) @ MM
-    msums = msums[0]    #discard first axis of resulting 1 by personcount matrix
-    for i in range(personCount):
-        model.addCons(msums[i] == 1)
-
-
+    model.addConstr(msums == np.ones((1,personCount)))
 
     #  ABSOLUTE ATTRIBUTE ERRORS
     AAEM_list = []
@@ -78,31 +66,30 @@ def optimize():
 
         AEM = MM @ DAM - np.tile(DIM[i, :], (4,1))
 
-        #AAEM = model.addMVar(shape = (4,14), name = f"absolute_error_{attributeList[i]}")
-        
+        print(np.tile(DIM[i, :], (4,1)))
+
         # introduce absolute attribute error matrix variable
-        AAEM = np.empty((4,14), dtype=pyscipopt.Variable)
+        AAEM = model.addMVar(shape = (4,14), name = f"absolute_error_{attributeList[i]}")
+        # enforce absolute value via constraints
         for compI in range(4):
             for day in range(14):
-                AAEM[compI, day] = model.addVar(name = f"abs_err_{attributeList[i]}_{compI}_{day}")
-                # enforce absolute value via constraints
-                model.addCons(    AEM[compI, day] <= AAEM[compI, day])
-                model.addCons(-1* AEM[compI, day] <= AAEM[compI, day])
+                model.addConstr(    AEM[compI, day] <= AAEM[compI, day])
+                model.addConstr(-1* AEM[compI, day] <= AAEM[compI, day])
 
         AAEM_list.append(AAEM)
-
 
     #  SHARED COMPANY MATRIX
     #       used for tracking whether two persons are assigned to the same company this year.
     #       just a fancy name for prepared products of columns of MM
-    SCM = np.empty((personCount,personCount), dtype=pyscipopt.Expr)
+    SCM = np.empty((personCount,personCount), dtype=gp.MQuadExpr)
 
     for i in range(personCount):
         for j in range(i, personCount):
-            ex = np.ones((1,4)) @ (MM[:, i] * MM[:, j])
-            ex = ex[0]
-            SCM[i,j] = ex
-            SCM[j,i] = ex
+            SCM[i,j] = np.ones((1,4)) @ (MM[:, i] * MM[:, j])
+            SCM[j,i] = SCM[i,j]
+
+
+
 
 
 
@@ -123,22 +110,18 @@ def optimize():
 
 
     cost = AAEsum + CCPsum
-    cost = cost[0]
 
-    objVar = model.addVar(name = "objectiveVariable")
-    model.addCons(objVar >= cost)
-
-    model.setObjective(objVar)
-
+    model.setObjective(cost)
+    #model.setParam('OutputFlag', False)
+    model.update()
+    model.printStats()
     model.optimize()
 
 
-    for i in range(4):
-        for j in range(personCount):
-            MM[i,j] = model.getVal(MM[i,j])
+    print(SCM[0,0])
+    print(SCM[0,0].item())
 
-    print("MM:")
-    print(MM)
+
 
     SCM_val = np.zeros((personCount,personCount))
     for i in range(personCount):
