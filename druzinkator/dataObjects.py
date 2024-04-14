@@ -65,6 +65,10 @@ class Person:
 
 class Assignment:
 
+    """
+    Assignment of people into companies.  The solution of the optimization problem.
+    """
+
     companies : List[List[Person]]
     personList : List[Person]
     SCM : np.matrix
@@ -110,6 +114,91 @@ class Assignment:
 
         return s
 
+
+class Problem:
+    """
+    Object for high-level description of the optim. problem, weighs etc.
+    """
+
+    personList : List[Person] = []
+    personDict = {}
+    attributeList : List[str] = []
+    attributeDict = {}
+
+    AAEweighs : List[np.array] = []
+
+    CCPM : np.matrix = None
+
+    attributeLimits : List[tuple] = []
+    keepTogetherSoftList : List[tuple] = []
+    keepTogetherHardList : List[tuple] = []
+    keepApartSoftList : List[tuple]  = []
+    keepApartHardList : List[tuple] = []
+    
+
+    def __init__(self, personList) -> None:
+        self.personList = personList
+        for i, person in enumerate(personList):
+            self.personDict[person.name] = i
+
+    def __registerAttribute(self, attr : str):
+        gotten = self.attributeDict.get(attr, None)
+        if gotten is None:
+            self.attributeDict[attr] = len(self.attributeList)
+            self.attributeList.append(attr)
+            self.AAEweighs.append(None)
+            self.attributeLimits.append(None)
+        
+    def setCCPM(self, CCPM : np.matrix):
+        """
+        Sets the Co-company penalty matrix to be used.
+        Obtained by calling vojtaToHistoryMatrix() and historyToCoCompanyPenalty()
+        """
+        self.CCPM = CCPM
+
+    def setAttributeErrorWeigh(self, attribute : str, dailyWeighVector : np.array):
+        """
+        Set weighs for penalizing Absolute Attribute Error of specified attribute.
+        You probably want to set this for attribute "human" at the very least.
+        Example:
+        setAttributeErrorWeigh("jokerit", dailyWeighVector = np.array([0]*7+[5]*3+[1]*4) )
+            This will penalize AAE of jokerit attribute on 8th, 9th and 10th day with weigh 5 and with weigh 1 on days 11 to 14. 
+            Jokerit errors on the first 7 days will not be penalized at all.
+        """
+        self.__registerAttribute(attribute)
+        self.AAEweighs[self.attributeDict[attribute]] = dailyWeighVector
+
+    def setAttributeLimits(self, attribute : str, min = -np.inf, max = np.inf, soft = False, softPenalty = 100, enableVector = np.ones((1,14))):
+        """
+        Sets (inclusive) limits for sum of defined attribute.
+        If soft is True, this translates into a soft constraint with penalty equal to softPenalty.
+        The constraint only applies on days whose value is 1 in enableVector.
+        
+        Example use:
+        problem.setAttributeLimits("rarasek", min=1)
+            Require that the sum of present attribute "rarasek" is always at least 1 in each company on each day.
+        """
+        self.__registerAttribute(attribute)
+        limitTuple = (min, max, soft, softPenalty, enableVector)
+        self.attributeLimits[self.attributeDict[attribute]] = limitTuple
+
+    def keepTogether(self, person1 : Person, person2 : Person, soft = False, softPenalty = 100):
+        """
+        Sets a constraint requiring that specified persons share a company.
+        """
+        if soft:
+            self.keepTogetherSoftList.append( (person1, person2, softPenalty) )
+        else:
+            self.keepTogetherHardList.append( (person1, person2) )
+
+    def keepApart(self, person1 : Person, person2 : Person, soft = False, softPenalty = 100):
+        """
+        Sets a constraint requiring that specified persons be placed in different companies.
+        """
+        if soft:
+            self.keepApartSoftList.append( (person1, person2, softPenalty) )
+        else:
+            self.keepApartHardList.append( (person1, person2) )
 
 
 

@@ -2,9 +2,9 @@
 from pyscipopt import Model
 import pyscipopt
 
-from dataObjects import Person, Assignment
-from visualize import visualizeAssignment
-from matrixUtils import *
+from .dataObjects import Person, Assignment
+from .visualize import visualizeAssignment
+from .matrixUtils import *
 
 
 import numpy as np

@@ -3,7 +3,8 @@ import numpy as np
 import logging as log
 
 from typing import List
-from dataObjects import *
+
+from .dataObjects import *
 
 def vojtaToHistoryMatrix(filename, ignoreYears = 0):
     """

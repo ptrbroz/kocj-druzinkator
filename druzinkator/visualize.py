@@ -1,9 +1,10 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-from dataObjects import Person, Assignment
 from typing import List
-from matrixUtils import *
+
+from .matrixUtils import *
+from .dataObjects import Person, Assignment
 
 def visualizeAssignment(assignment : Assignment, attributeList : List[str], CCPM : np.matrix):
     """
