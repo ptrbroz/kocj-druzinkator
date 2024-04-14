@@ -1,3 +1,6 @@
+
+###     old code from before migration, keeping in case I need to migrate back to gurobi
+
 from dataObjects import Person, Assignment
 from visualize import visualizeAssignment
 from matrixUtils import *

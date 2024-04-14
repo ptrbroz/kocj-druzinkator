@@ -29,8 +29,12 @@ def optimize():
     h8 = Person("Eliška Jača", "matfyz")
     h9 = Person("Nováček první", "jokerit", presence = np.array([0]*4 + [1]*4 + [0]*6))
     h10 = Person("Nováček druhý")
+    h11 = Person("Rarach1", "rarach")
+    h12 = Person("Rarach2", "rarach")
+    h13 = Person("Rarach3", "rarach")
+    h14 = Person("Rarach4", "rarach")
 
-    personList = [h1, h2, h3, h4, h5, h6, h7, h8, h9, h10]
+    personList = [h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12, h13, h14]
 
     attributeList = ["human", "jokerit", "matfyz"]
 
@@ -40,9 +44,11 @@ def optimize():
     personCount = len(personList)
 
 
-    penaltyVector = 0.1*np.array([15, 7, 3])
 
-    CCPM = vojtaToCoCoPenaltyMatrix("tabory_ucastnici.xlsx", personList, penaltyVector)
+    historyNameList, historyMatrix = vojtaToHistoryMatrix("tabory_ucastnici.xlsx")
+
+    penaltyVector = 0.1*np.array([15, 7, 3])
+    CCPM =  historyToCoCoPenaltyMatrix(historyMatrix, historyNameList, personList, penaltyVector)
 
     
     DSM, DAM_list = calculateDailyMatrices(personList, attributeList)
@@ -122,7 +128,7 @@ def optimize():
         AAEsum += np.ones((1,4)) @ AAEM @ weightsList[i]
 
 
-    cost = AAEsum #+ CCPsum
+    cost = AAEsum + CCPsum
     cost = cost[0]
 
     objVar = model.addVar(name = "objectiveVariable")

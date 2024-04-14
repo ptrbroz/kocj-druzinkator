@@ -37,7 +37,7 @@ def visualizeAssignment(assignment : Assignment, attributeList : List[str], CCPM
             ax.plot(tdays, attrData, '--', linewidth = 2, alpha = 0.8)
             ax.set_xticks(tdays)
         ideal = DIM[i, :]
-        ax.plot(tdays, ideal, linewidth = 2, alpha = 0.5)
+        ax.plot(tdays, ideal, linewidth = 3, alpha = 0.7)
 
         if i == 0:
             ax.legend(["C0", "C1", "C2", "C3", "Ideal"], loc = 'upper right')

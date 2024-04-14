@@ -5,7 +5,7 @@ import logging as log
 from typing import List
 from dataObjects import *
 
-def vojtaToHistoryMatrix(filename):
+def vojtaToHistoryMatrix(filename, ignoreYears = 0):
     """
     Convert Vojta's excel table into a history matrix and list of names.
     Logs warnings if something seems off about the data.
@@ -14,6 +14,8 @@ def vojtaToHistoryMatrix(filename):
     ---
     filename : string
         Filename of Vojta's excel table, downloaded to this folder.
+    ignoreYears : int
+        Optional.  Used to ignore last N years (for solving past camps)
 
     Returns:
     ---
@@ -35,7 +37,7 @@ def vojtaToHistoryMatrix(filename):
 
     #this might need updating should the structure of Vojta's excel change
     COL_YEAR_FIRST = 7                  
-    COL_YEAR_LAST = len(rows[0]) - 3
+    COL_YEAR_LAST = len(rows[0]) - (3 + ignoreYears)
     COL_SURNAME = 0                     
     COL_NAME = 2                        
     ROW_PERSON_FIRST = 11
@@ -86,12 +88,12 @@ def vojtaToHistoryMatrix(filename):
     return personNameList, historyMatrix
 
 
-def vojtaToCoCoPenaltyMatrix(filename, personList : List[Person], penaltyVector : np.array):
+def historyToCoCoPenaltyMatrix(historyMatrix : np.matrix, vojtaPersonNameList : List[str], personList : List[Person], penaltyVector : np.array):
     """
-    Converts Vojta's excel file into CoCompany Penalty Matrix (CCPM).
+    Converts a history matrix into CoCompany Penalty Matrix (CCPM).
 
     arguments:
-    filename : location of Vojta's excel
+    historyMatrix, vojtaPersonNameList : outputs from vojtaToHistoryMatrix()
     personList : list of people for which to generate CCPM
     penaltyVector : vector of penalty values for sharing a company.  Number of elements corresponds to number of years into the past that
         are taken into account, starting with last year.
@@ -114,8 +116,6 @@ def vojtaToCoCoPenaltyMatrix(filename, personList : List[Person], penaltyVector 
     etc.
 
     """
-
-    vojtaPersonNameList, historyMatrix = vojtaToHistoryMatrix(filename)
 
     #prepare translation from user supplied personList to vojta indices
     vojtaNameDict = {}
