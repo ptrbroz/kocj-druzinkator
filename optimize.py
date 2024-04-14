@@ -122,7 +122,7 @@ def optimize():
         AAEsum += np.ones((1,4)) @ AAEM @ weightsList[i]
 
 
-    cost = AAEsum + CCPsum
+    cost = AAEsum #+ CCPsum
     cost = cost[0]
 
     objVar = model.addVar(name = "objectiveVariable")
@@ -132,22 +132,20 @@ def optimize():
 
     model.optimize()
 
-
+    MM_val = np.empty((4, personCount), dtype=int)
     for i in range(4):
         for j in range(personCount):
-            MM[i,j] = model.getVal(MM[i,j])
+            MM_val[i,j] = round(model.getVal(MM[i,j]))
 
-    print("MM:")
-    print(MM)
+    print("MM_val:")
+    print(MM_val)
 
-    SCM_val = np.zeros((personCount,personCount))
+    SCM_val = np.zeros((personCount,personCount), dtype=int)
     for i in range(personCount):
         for j in range(personCount):
-            SCM_val[i,j] = SCM[i,j].item().getValue()
+            SCM_val[i,j] = model.getVal(SCM[i,j])
 
-    print(SCM_val)
-
-    result = Assignment(personList, MM.x, SCM_val)
+    result = Assignment(personList, MM_val, SCM_val)
 
 
     visualizeAssignment(result, attributeList, CCPM)

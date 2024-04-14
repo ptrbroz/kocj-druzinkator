@@ -94,6 +94,7 @@ class Assignment:
                 if(membershipMatrix[i,j]):
                     companyList.append(person)
                     self.dict[person.name] = i
+                    #print(f"MM@[{i},{j}] = {membershipMatrix[i,j]}, {person.name} -> C{i}")
 
     def getCompanyByName(self, personName : str) -> int:
         """
