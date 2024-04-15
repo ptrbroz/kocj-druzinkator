@@ -2,7 +2,7 @@ import click
 import numpy as np
 
 from druzinkator.dataObjects import *
-from druzinkator.matrixUtils import vojtaToHistoryMatrix, historyToCoCoPenaltyMatrix
+from druzinkator.matrixUtils import vojtaToHistoryMatrix, historyToCoCoPenaltyMatrix, vojtaNameListToDict, autoRarasek
 from druzinkator.optimize import optimize
 from druzinkator.visualize import visualizeAssignment
 
@@ -30,6 +30,13 @@ def defineAndSolveProblem(output, vojtafile):
 
     #-------------------------------------------------------------------------------------
 
+
+    historyNameList, historyMatrix = vojtaToHistoryMatrix(vojtafile)
+    vojtaNameDict = vojtaNameListToDict(personList,historyNameList)
+    penaltyVector = 0.1*np.array([15, 7, 3])
+
+    autoRarasek(personList, historyMatrix, vojtaNameDict)   
+
     problem = Problem(personList)
 
     defaultVector = np.array([0]*1 + [1]*13)
@@ -38,9 +45,7 @@ def defineAndSolveProblem(output, vojtafile):
     problem.setAttributeErrorWeigh("jokerit", defaultVector)
     problem.setAttributeErrorWeigh("matfyz", defaultVector)
 
-    historyNameList, historyMatrix = vojtaToHistoryMatrix(vojtafile)
-    penaltyVector = 0.1*np.array([15, 7, 3])
-    CCPM =  historyToCoCoPenaltyMatrix(historyMatrix, historyNameList, personList, penaltyVector)
+    CCPM =  historyToCoCoPenaltyMatrix(historyMatrix, vojtaNameDict, personList, penaltyVector)
     problem.setCCPM(CCPM)
 
 

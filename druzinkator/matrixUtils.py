@@ -2,7 +2,7 @@ from openpyxl import load_workbook
 import numpy as np
 import logging as log
 
-from typing import List
+from typing import List, Dict
 
 from .dataObjects import *
 
@@ -86,10 +86,23 @@ def vojtaToHistoryMatrix(filename, ignoreYears = 0):
     log.info(f'''Incomplete data (fewer than 4 companies found) for following years:
               {[rows[0][COL_YEAR_FIRST+i] for i in incompleteYears]}''')
 
+    
+
     return personNameList, historyMatrix
 
+def vojtaNameListToDict(personList : list[Person], vojtaNameList : list[str]) -> Dict[str, int]:
+    """
+    Generates a dictionary mapping current year's personNameList to vojta's historymatrix
+    """
+    vojtaNameDict = {}
+    for i, vName in enumerate(vojtaNameList):
+        for person in personList:
+            if person.name == vName:
+                vojtaNameDict[person.name] = i
+    return vojtaNameDict
 
-def historyToCoCoPenaltyMatrix(historyMatrix : np.matrix, vojtaPersonNameList : List[str], personList : List[Person], penaltyVector : np.array):
+
+def historyToCoCoPenaltyMatrix(historyMatrix : np.matrix, vojtaNameDict : Dict[str,int], personList : List[Person], penaltyVector : np.array):
     """
     Converts a history matrix into CoCompany Penalty Matrix (CCPM).
 
@@ -117,13 +130,6 @@ def historyToCoCoPenaltyMatrix(historyMatrix : np.matrix, vojtaPersonNameList : 
     etc.
 
     """
-
-    #prepare translation from user supplied personList to vojta indices
-    vojtaNameDict = {}
-    for i, vName in enumerate(vojtaPersonNameList):
-        for person in personList:
-            if person.name == vName:
-                vojtaNameDict[person.name] = i
 
     #check which people are not in Vojta's history file
     assumedNewbies = []
@@ -199,8 +205,33 @@ def calculateDailyMatrices(personList : List[Person], attributeList : List[str])
     return DSM, DAM_list
     
 
+def autoRarasek(personList : List[Person], historyMatrix : np.matrix, vojtaNameDict : Dict[str, int], requiredYears = 2, requiredPresence = 13, rarasekStr = "rarasek"):
+    """
+    Automatically assigns the "rarasek" attribute to people meeting criteria.
 
-
+    arguments:
+    personList : list of persons in camp
+    historyMatrix, vojtaNameList : outputs from vojtaToHistoryMatrix()
+    requiredYears : int.  Number of years of experience needed to be eligible for rarasek
+    requiredPresence : int.  Number of days that must be 1 in person's presence vector to make person eligible for rarasek
+    rarasekStr : str.  String representing the attribute that will be bestowed upon those found worthy
+    """
+    
+    for person in personList:
+        presence = np.sum(person.presence)
+        if presence < requiredPresence:
+            continue
+        personRow = vojtaNameDict.get(person.name, None)
+        if personRow is None:
+            continue
+        experience = 0
+        for i in range(historyMatrix.shape[1]):
+            if historyMatrix[personRow, i]:
+                experience += 1
+                if experience >= requiredYears:
+                    person.set("rarasek")
+                    print(f"{person.name} is worthy.")
+                    break
 
 
 

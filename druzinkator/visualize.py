@@ -6,12 +6,14 @@ from typing import List
 from .matrixUtils import *
 from .dataObjects import Person, Assignment
 
-def visualizeAssignment(assignment : Assignment, problem : Problem):
+def visualizeAssignment(assignment : Assignment, problem : Problem, attributeList = None):
     """
-    Reports and plots results of supplied assignment for attributes given in attributeList
+    Visualizes supplied assignment and problem.
+    All attributes specified in problem.attributeList will be visualized, unless attributeList argument is given.
     """
 
-    attributeList = problem.attributeList
+    if attributeList is None:
+        attributeList = problem.attributeList
     CCPM = problem.CCPM
 
     print(f"Taking into account attributes {attributeList}")
