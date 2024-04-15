@@ -48,7 +48,10 @@ def defineAndSolveProblem(output, vojtafile, maxtime):
     problem.setAttributeErrorWeigh("matfyz", defaultVector)
     problem.setAttributeErrorWeigh("novacek", defaultVector)
 
-    #penalize each day shared by
+    #penalize people for sharing companies if they've been together in a company previously.
+    #Specifically:  If A and B share a company AND they shared a company last year, their penalty will be 0.5 * x, where 
+    #x = number of days both A and B are present.  If A and B shared a company the year before last, then penalty is 0.2 * x.  If they shared 
+    #a company both in the year before last and in last year, penalty is (0.5 + 0.2) * x.
     penaltyVector = np.array([0.5, 0.2])
     CCPM =  historyToCoCoPenaltyMatrix(historyMatrix, vojtaNameDict, personList, penaltyVector)
     problem.setCCPM(CCPM)
@@ -80,5 +83,5 @@ def defineAndSolveProblem(output, vojtafile, maxtime):
 
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':#
     defineAndSolveProblem()
