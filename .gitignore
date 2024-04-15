@@ -1,2 +1,12 @@
 #ignore downloaded copy of Vojta Ulehla's database
 tabory_ucastnici.xlsx
+
+#ignore .py files in root -- setups will be placed here
+*.py
+
+#ignore all .pkl files -- ie. saved setups and solutions
+**/*.pkl
+
+#ignore weird cython stuff
+druzinkator/__pycache__/
+__pycache__/
