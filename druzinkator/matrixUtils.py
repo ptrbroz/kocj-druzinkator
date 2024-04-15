@@ -229,11 +229,27 @@ def autoRarasek(personList : List[Person], historyMatrix : np.matrix, vojtaNameD
             if historyMatrix[personRow, i]:
                 experience += 1
                 if experience >= requiredYears:
-                    person.set("rarasek")
+                    person.set(rarasekStr)
                     print(f"{person.name} is worthy.")
                     break
 
+def autoNovacek(personList : List[Person], historyMatrix : np.matrix, vojtaNameDict : Dict[str, int], novacekStr = "novacek"):
+    """
+    Like autoRarasek, but instead gives attributes to those who have never been in company according to historyMatrix
+    """
+    newbies : List[Person] = []
+    for person in personList:
+        personRow = vojtaNameDict.get(person.name, None)
+        if personRow is None:
+            newbies.append(person)
+            continue
+        compIdSum = sum(historyMatrix[personRow, :])
+        if compIdSum == 0:
+            newbies.append(person)
 
+    for person in newbies:
+        person.set(novacekStr)
+        print(f"{person.name} is a newbie")
 
 if __name__ == "__main__":
     log.basicConfig()

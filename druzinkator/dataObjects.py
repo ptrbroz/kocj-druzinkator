@@ -6,7 +6,7 @@ class Person:
     Ocejak vulgaris taboritae. 
     """
 
-    def __init__(self, name, *atributes, presence = None):
+    def __init__(self, name, *atributes, presence = None, addTo : List = None):
         """
         Params:
         ---------
@@ -17,6 +17,7 @@ class Person:
             Alternatively, if an attribute is supplied in the form of a tuple, it is initialized to the value of the second element.
         presence : numpy array of 1s and 0s, length = 14
             optional (defaults to ones). 1 -> person is present on that day, 0-> not present
+        addTo : list of Person.  Optional.  If specified, constructor appends newly created object to this list.
         Example:
             j = Person("Jan Tleskač", "jokerit", ("matfyz", 0.2))
             
@@ -38,6 +39,9 @@ class Person:
                 self.dict[a[0]] = a[1]
             else:
                 self.dict[a] = 1
+
+        if addTo is not None:
+            addTo.append(self)
 
 
     def get(self, attribute):

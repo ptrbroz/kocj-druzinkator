@@ -183,8 +183,10 @@ def optimize(problem : Problem) -> Assignment:
     model.optimize()
 
     status = model.getStatus()
-    if status != "optimal":
-        print("Could not find assignment.")
+    if status == "userinterrupt":
+        print("Interrupted!")
+    elif status != "optimal":
+        print(f"Could not find assignment. {status}")
         return None
 
     MM_val = np.empty((4, personCount), dtype=int)
