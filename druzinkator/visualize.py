@@ -54,6 +54,7 @@ def visualizeAssignment(assignment : Assignment, problem : Problem, attributeLis
     #cocompany penalty matrix plot
 
     CCPMfig, ax = plt.subplots()
+    CCPMfig.suptitle("Co-Company Penalty Matrix")
 
     personList = assignment.personList
     pcount = len(personList)
@@ -101,7 +102,7 @@ def visualizeAssignment(assignment : Assignment, problem : Problem, attributeLis
             color = 'white'
             if sharedCompany:
                 if ccp > 0:
-                    #maybe todo: pass twice and change red hue dep. on severity?
+                    #maybe todo: pass twice and change red hue depending on severity?
                     color = (1, 0.5, 0.5)
                 else:
                     color = (0.8, 1, 0.7)

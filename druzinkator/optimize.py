@@ -13,7 +13,7 @@ import scipy.sparse as sp
 
 from typing import List
 
-def optimize(problem : Problem) -> Assignment:
+def optimize(problem : Problem, maxtime) -> Assignment:
     """
     Finds optimal assignment to companies according to people, constraints, weighs etc. described by problem.
     """
@@ -44,7 +44,6 @@ def optimize(problem : Problem) -> Assignment:
             MM[i,j] = model.addVar(name = f"Membership_{i}_{j}", vtype = 'B')
 
     #add constaraint: each person is a member of exactly one company
-    print(MM)
     msums = np.ones((1, 4)) @ MM
     msums = msums[0]    #discard first axis of resulting 1 by personcount matrix
     for i in range(personCount):
@@ -180,11 +179,13 @@ def optimize(problem : Problem) -> Assignment:
 
     model.setObjective(objVar)
 
+    model.setParam('limits/time', maxtime)
+
     model.optimize()
 
     status = model.getStatus()
-    if status == "userinterrupt":
-        print("Interrupted!")
+    if status in ["userinterrupt", "timelimit"]:
+        pass
     elif status != "optimal":
         print(f"Could not find assignment. {status}")
         return None

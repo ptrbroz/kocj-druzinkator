@@ -11,7 +11,7 @@ class Person:
         Params:
         ---------
         name : string
-            required. Use same format as Vojta's excel (e.g. "Vojta Úlehla")
+            required. Use same format as Vojta's excel (e.g. "Petr Brož")
         *atributes: either string or (string, value)
             optional. Initialises supplied attribute names to 1.
             Alternatively, if an attribute is supplied in the form of a tuple, it is initialized to the value of the second element.
