@@ -27,6 +27,8 @@ def optimize(problem : Problem) -> Assignment:
 
     attributeLimits = problem.attributeLimitsList
 
+    personalCouplingList = problem.personalCouplingList
+
     weightsList = problem.AAEweighs
     CCPM = problem.CCPM
 
@@ -142,11 +144,31 @@ def optimize(problem : Problem) -> Assignment:
                 CCPsum += addendum
 
 
+    #keep together / keep apart constraints 
+    for coupling in personalCouplingList:
 
+        p1 : Person = coupling[0]
+        p2 : Person = coupling[1]
+        desiredProduct = coupling[2]
 
+        softWeight = None
+        if len(coupling) > 3:
+            softWeight = coupling[3]
 
+        #get variable representing those people sharing a company
+        product = SCM[personDict[p1.name], personDict[p2.name]]
 
+        if softWeight is None:
+            model.addCons(product == desiredProduct)
+        else:
+            #add soft constraint
+            s = model.addVar(name = f"Slack", vtype = 'B')
+            if desiredProduct == 1:
+                model.addCons(product + s == desiredProduct)
+            elif desiredProduct == 0:
+                model.addCons(product - s == desiredProduct)
 
+            softPenaltySum += s * softWeight
 
 
     # -------------------------------------------

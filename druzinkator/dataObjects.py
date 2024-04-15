@@ -130,8 +130,8 @@ class Problem:
     CCPM : np.matrix = None
 
     attributeLimitsList : List[tuple] = []
-    keepTogetherList : List[tuple] = []
-    keepApartList : List[tuple] = []
+
+    personalCouplingList : List[tuple] = []
     
 
     def __init__(self, personList) -> None:
@@ -145,7 +145,7 @@ class Problem:
             self.attributeDict[attr] = len(self.attributeList)
             self.attributeList.append(attr)
             self.AAEweighs.append(None)
-        print(f"regAtt: {attr}, gotten = {gotten}.  {self.attributeList}")
+        #print(f"regAtt: {attr}, gotten = {gotten}.  {self.attributeList}")
         
     def setCCPM(self, CCPM : np.matrix):
         """
@@ -189,19 +189,21 @@ class Problem:
         """
         Sets a constraint requiring that specified persons share a company.
         """
+        product = 1
         if soft:
-            self.keepTogetherSoftList.append( (person1, person2, softPenalty) )
+            self.personalCouplingList.append( (person1, person2, product, softPenalty) )
         else:
-            self.keepTogetherHardList.append( (person1, person2) )
+            self.personalCouplingList.append( (person1, person2, product) )
 
     def keepApart(self, person1 : Person, person2 : Person, soft = False, softPenalty = 100):
         """
         Sets a constraint requiring that specified persons be placed in different companies.
         """
+        product = 0
         if soft:
-            self.keepApartSoftList.append( (person1, person2, softPenalty) )
+            self.personalCouplingList.append( (person1, person2, product, softPenalty) )
         else:
-            self.keepApartHardList.append( (person1, person2) )
+            self.personalCouplingList.append( (person1, person2, product) )
 
 
 

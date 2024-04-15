@@ -47,6 +47,9 @@ def defineAndSolveProblem(output, vojtafile):
     problem.addAttributeLimits("rarasek", min=1)
     problem.addAttributeLimits("matfyz", max=1, soft = 1, softPenalty=0.000001)
 
+    problem.keepTogether(h1, h2)
+    problem.keepTogether(h2, h5, soft=1)
+    problem.keepApart(h3, h6, soft = 1)
 
     #-------------------------------------------------------------------------------------
 
