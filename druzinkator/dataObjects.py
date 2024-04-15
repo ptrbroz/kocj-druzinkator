@@ -26,7 +26,7 @@ class Person:
             presence = np.ones(14)
         elif len(presence) != 14:
             raise Exception(f"Wrong length of supplied presence vector. Wanted 14, got {len(presence)}")
-        self.presence = presence
+        self.presence = presence.flatten()
         self.dict = {}
 
         self.dict["human"] = 1
@@ -129,11 +129,9 @@ class Problem:
 
     CCPM : np.matrix = None
 
-    attributeLimits : List[tuple] = []
-    keepTogetherSoftList : List[tuple] = []
-    keepTogetherHardList : List[tuple] = []
-    keepApartSoftList : List[tuple]  = []
-    keepApartHardList : List[tuple] = []
+    attributeLimitsList : List[tuple] = []
+    keepTogetherList : List[tuple] = []
+    keepApartList : List[tuple] = []
     
 
     def __init__(self, personList) -> None:
@@ -147,7 +145,7 @@ class Problem:
             self.attributeDict[attr] = len(self.attributeList)
             self.attributeList.append(attr)
             self.AAEweighs.append(None)
-            self.attributeLimits.append(None)
+        print(f"regAtt: {attr}, gotten = {gotten}.  {self.attributeList}")
         
     def setCCPM(self, CCPM : np.matrix):
         """
@@ -166,11 +164,11 @@ class Problem:
             Jokerit errors on the first 7 days will not be penalized at all.
         """
         self.__registerAttribute(attribute)
-        self.AAEweighs[self.attributeDict[attribute]] = dailyWeighVector
+        self.AAEweighs[self.attributeDict[attribute]] = dailyWeighVector.flatten()
 
-    def setAttributeLimits(self, attribute : str, min = -np.inf, max = np.inf, soft = False, softPenalty = 100, enableVector = np.ones((1,14))):
+    def addAttributeLimits(self, attribute : str, min = -np.inf, max = np.inf, soft = False, softPenalty = 100, enableVector = np.ones((1,14))):
         """
-        Sets (inclusive) limits for sum of defined attribute.
+        Adds (inclusive) limits for sum of defined attribute to problem constraints.
         If soft is True, this translates into a soft constraint with penalty equal to softPenalty.
         The constraint only applies on days whose value is 1 in enableVector.
         
@@ -179,8 +177,13 @@ class Problem:
             Require that the sum of present attribute "rarasek" is always at least 1 in each company on each day.
         """
         self.__registerAttribute(attribute)
-        limitTuple = (min, max, soft, softPenalty, enableVector)
-        self.attributeLimits[self.attributeDict[attribute]] = limitTuple
+        if soft:
+            limitTuple = (self.attributeDict[attribute], min, max, enableVector.flatten(), softPenalty)
+            self.attributeLimitsList.append(limitTuple)
+        else:
+            limitTuple = (self.attributeDict[attribute], min, max, enableVector.flatten())
+            self.attributeLimitsList.append(limitTuple)
+
 
     def keepTogether(self, person1 : Person, person2 : Person, soft = False, softPenalty = 100):
         """

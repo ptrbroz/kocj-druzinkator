@@ -6,10 +6,13 @@ from typing import List
 from .matrixUtils import *
 from .dataObjects import Person, Assignment
 
-def visualizeAssignment(assignment : Assignment, attributeList : List[str], CCPM : np.matrix):
+def visualizeAssignment(assignment : Assignment, problem : Problem):
     """
     Reports and plots results of supplied assignment for attributes given in attributeList
     """
+
+    attributeList = problem.attributeList
+    CCPM = problem.CCPM
 
     print(f"Taking into account attributes {attributeList}")
     print("Visualizing following assignment:")
@@ -20,7 +23,6 @@ def visualizeAssignment(assignment : Assignment, attributeList : List[str], CCPM
     DIM = DSM / 4
 
     tdays = np.linspace(1, 14, 14)
-    print(tdays)
 
     hratios = [(int(x == "human")*0.5 + 1) for x in attributeList]  #make manpower subplot a little bigger
     attrFig, attrAxs = plt.subplots(len(attributeList), gridspec_kw={'height_ratios':hratios})
@@ -69,8 +71,6 @@ def visualizeAssignment(assignment : Assignment, attributeList : List[str], CCPM
     ax.invert_yaxis()
 
     ax.grid()
-
-    print(CCPM)
 
     for j in range(pcount):
         for i in range(pcount):

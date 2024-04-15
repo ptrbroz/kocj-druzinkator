@@ -2,7 +2,7 @@
 from pyscipopt import Model
 import pyscipopt
 
-from .dataObjects import Person, Assignment
+from .dataObjects import *
 from .visualize import visualizeAssignment
 from .matrixUtils import *
 
@@ -13,52 +13,27 @@ import scipy.sparse as sp
 
 from typing import List
 
-def optimize():
+def optimize(problem : Problem) -> Assignment:
     """
-    TODO: add arguments and describe
+    Finds optimal assignment to companies according to people, constraints, weighs etc. described by problem.
     """
 
-
-    h1 = Person("Petr Brož", "jokerit", "matfyz", presence = np.array([1]*10 + [0]*4))
-    h2 = Person("Jan Macháň", "jokerit", "matfyz")
-    h3 = Person("Kateřina Bímová", presence = np.array([0]*2 + [1]*12))
-    h4 = Person("Matěj Břeň", "jokerit")
-    h5 = Person("Eliška Byrtusová")
-    h6 = Person("Kateřina Čížková", "matfyz", presence = np.array([0]*7 + [1]*7))
-    h7 = Person("David Pokorný", "jokerit")
-    h8 = Person("Eliška Jača", "matfyz")
-    h9 = Person("Nováček první", "jokerit", presence = np.array([0]*4 + [1]*4 + [0]*6))
-    h10 = Person("Nováček druhý")
-    h11 = Person("Rarach1", "rarach")
-    h12 = Person("Rarach2", "rarach")
-    h13 = Person("Rarach3", "rarach")
-    h14 = Person("Rarach4", "rarach")
-
-    personList = [h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12, h13, h14]
-
-    attributeList = ["human", "jokerit", "matfyz"]
-
-    defaultVector = np.append([0], np.ones(13))
-    weightsList = [defaultVector.copy(), defaultVector.copy(), defaultVector.copy()]
-
+    personList = problem.personList
+    personDict = problem.personDict
     personCount = len(personList)
 
+    attributeList = problem.attributeList
+    attributeDict = problem.attributeDict
 
+    attributeLimits = problem.attributeLimitsList
 
-    historyNameList, historyMatrix = vojtaToHistoryMatrix("tabory_ucastnici.xlsx")
+    weightsList = problem.AAEweighs
+    CCPM = problem.CCPM
 
-    penaltyVector = 0.1*np.array([15, 7, 3])
-    CCPM =  historyToCoCoPenaltyMatrix(historyMatrix, historyNameList, personList, penaltyVector)
-
-    
     DSM, DAM_list = calculateDailyMatrices(personList, attributeList)
     DIM = DSM/4 #daily ideal matrix. Holds ideal ammount of people and attributes per company per day
 
-    print(DSM)
-
     model = Model("companies")
-
-
 
     #   MEMBERSHIP
     MM = np.empty((4, personCount), dtype= pyscipopt.Variable)
@@ -74,15 +49,25 @@ def optimize():
         model.addCons(msums[i] == 1)
 
 
+    #  precalculate attribute sum matrices
+    ASM_list = []
+    for i, DAM in enumerate(DAM_list):
+        ASM = MM @ DAM 
+        ASM_list.append(ASM)
+
 
     #  ABSOLUTE ATTRIBUTE ERRORS
-    AAEM_list = []
+    AAEsum = 0
+
     for i, DAM in enumerate(DAM_list):
         # for each attribute, calculate AEM = attribute error matrix.  
         # AEM is a 4 by 14 matrix where each cell is that company's error from the ideal (=DIM) on that day for that attribute.
         # Since the first attribute is always the "human" attribute, the first AAEM effectively shows errors in manpower.
 
-        AEM = MM @ DAM - np.tile(DIM[i, :], (4,1))
+        if weightsList[i] is None:
+            continue
+
+        AEM = ASM_list[i] - np.tile(DIM[i, :], (4,1))
 
         #AAEM = model.addMVar(shape = (4,14), name = f"absolute_error_{attributeList[i]}")
         
@@ -95,7 +80,44 @@ def optimize():
                 model.addCons(    AEM[compI, day] <= AAEM[compI, day])
                 model.addCons(-1* AEM[compI, day] <= AAEM[compI, day])
 
-        AAEM_list.append(AAEM)
+        addendum = np.ones((1,4)) @ AAEM @ weightsList[i]
+        AAEsum += addendum[0]
+
+    softPenaltySum = 0
+
+    #  ATTRIBUTE LIMITS
+    for limitTuple in attributeLimits:
+        print(limitTuple)
+        attrId = limitTuple[0]
+        min = limitTuple[1]
+        max = limitTuple[2]
+        enableVector = limitTuple[3]
+
+        softWeight = None       
+        if len(limitTuple) > 4:
+            softWeight = limitTuple[4]
+
+        ASM = ASM_list[attrId]
+
+        for day in range(len(enableVector)):
+            if not enableVector[day]:
+                continue
+            for compId in range(4):
+                compSum = ASM[compId, day]
+                if softWeight is None:
+                    #add hard constraints
+                    model.addCons(compSum >= min)
+                    model.addCons(compSum <= max)
+                else:
+                    #add soft constraints
+                    s1 = model.addVar(name = f"Slack", vtype = 'C')
+                    s2 = model.addVar(name = f"Slack", vtype = 'C')
+
+                    model.addCons(compSum + s1 >= min)
+                    model.addCons(compSum - s2 <= max)
+
+                    softPenaltySum += (s1 + s2) * softWeight
+
 
 
     #  SHARED COMPANY MATRIX
@@ -110,26 +132,26 @@ def optimize():
             SCM[i,j] = ex
             SCM[j,i] = ex
 
-
-
-
     #sum of penalties for sharing companies with people they have shared companies with previously
     CCPsum = 0
     for i in range(personCount):
         for j in range(i, personCount):     #take just lower triangle to avoid doubling
             if CCPM[i,j] != 0:
                 penalty = CCPM[i,j] * np.sum(personList[i].presence * personList[j].presence)
-                CCPsum += SCM[i,j] * penalty
+                addendum = SCM[i,j] * penalty
+                CCPsum += addendum
 
 
-    #weighed sum of absolute attribute errors
-    AAEsum = 0
-    for i, AAEM in enumerate(AAEM_list):
-        AAEsum += np.ones((1,4)) @ AAEM @ weightsList[i]
 
 
-    cost = AAEsum + CCPsum
-    cost = cost[0]
+
+
+
+
+
+    # -------------------------------------------
+
+    cost = AAEsum + CCPsum + softPenaltySum
 
     objVar = model.addVar(name = "objectiveVariable")
     model.addCons(objVar >= cost)
@@ -137,6 +159,11 @@ def optimize():
     model.setObjective(objVar)
 
     model.optimize()
+
+    status = model.getStatus()
+    if status != "optimal":
+        print("Could not find assignment.")
+        return None
 
     MM_val = np.empty((4, personCount), dtype=int)
     for i in range(4):
@@ -154,8 +181,7 @@ def optimize():
     result = Assignment(personList, MM_val, SCM_val)
 
 
-    visualizeAssignment(result, attributeList, CCPM)
-
+    return result
 
 
         
