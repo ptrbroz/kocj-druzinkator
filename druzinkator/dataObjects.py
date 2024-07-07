@@ -119,12 +119,14 @@ class Assignment:
         return s
 
 
+
 class Problem:
     """
     Object for high-level description of the optim. problem, weighs etc.
     """
 
     personList : List[Person] 
+    companyFixList : List[int]
     personDict : dict
     attributeList : List[str] 
     attributeDict : dict
@@ -140,6 +142,7 @@ class Problem:
 
     def __init__(self, personList) -> None:
         self.personList = personList
+        self.companyFixList = [None] * len(personList)
         self.personDict = {}
         self.attributeList = []
         self.attributeDict = {}
@@ -147,6 +150,7 @@ class Problem:
         self.CCPM = None
         self.attributeLimitsList = []
         self.personalCouplingList = []
+        self.companyFixDict = {}
 
         for i, person in enumerate(personList):
             self.personDict[person.name] = i
@@ -158,7 +162,23 @@ class Problem:
             self.attributeList.append(attr)
             self.AAEweighs.append(None)
         #print(f"regAtt: {attr}, gotten = {gotten}.  {self.attributeList}")
-        
+
+    def getPersonByName(self, name : str):
+        index = self.personDict.get(name, None)
+        if index is None:
+            return None
+        return self.personList[index]
+
+    def fixPeopleFromOldAssignment(self, peopleList : List[Person], oldAss : Assignment):
+        """
+        Add a hard constraint that every person in @peopleList, if also present in this problem definition, be placed 
+        in the same company as they were placed into in @oldAss.
+        """
+        for p in peopleList:
+            index = self.personDict.get(p.name, None)
+            if index is not None:
+                self.companyFixList[index] = oldAss.getCompanyByName(p.name)
+
     def setCCPM(self, CCPM : np.matrix):
         """
         Sets the Co-company penalty matrix to be used.

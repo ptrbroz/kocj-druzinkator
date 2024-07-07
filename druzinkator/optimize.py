@@ -13,9 +13,10 @@ import scipy.sparse as sp
 
 from typing import List
 
-def optimize(problem : Problem, maxtime) -> Assignment:
+def optimize(problem : Problem, oldAssignment : Assignment = None, maxtime = None) -> Assignment:
     """
     Finds optimal assignment to companies according to people, constraints, weighs etc. described by problem.
+    If the oldAssignment argument is set, then assignments present in oldAssignment will be fixed.
     """
 
     personList = problem.personList
@@ -48,6 +49,8 @@ def optimize(problem : Problem, maxtime) -> Assignment:
     msums = msums[0]    #discard first axis of resulting 1 by personcount matrix
     for i in range(personCount):
         model.addCons(msums[i] == 1)
+
+    #add constraints: persons which are already assigned in oldAssignment remain in their respective companies.
 
 
     #  precalculate attribute sum matrices
