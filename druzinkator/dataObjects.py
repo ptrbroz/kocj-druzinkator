@@ -124,22 +124,30 @@ class Problem:
     Object for high-level description of the optim. problem, weighs etc.
     """
 
-    personList : List[Person] = []
-    personDict = {}
-    attributeList : List[str] = []
-    attributeDict = {}
+    personList : List[Person] 
+    personDict : dict
+    attributeList : List[str] 
+    attributeDict : dict
 
-    AAEweighs : List[np.array] = []
+    AAEweighs : List[np.array] 
 
-    CCPM : np.matrix = None
+    CCPM : np.matrix 
 
-    attributeLimitsList : List[tuple] = []
+    attributeLimitsList : List[tuple] 
 
-    personalCouplingList : List[tuple] = []
+    personalCouplingList : List[tuple] 
     
 
     def __init__(self, personList) -> None:
         self.personList = personList
+        self.personDict = {}
+        self.attributeList = []
+        self.attributeDict = {}
+        self.AAEweighs = []
+        self.CCPM = None
+        self.attributeLimitsList = []
+        self.personalCouplingList = []
+
         for i, person in enumerate(personList):
             self.personDict[person.name] = i
 
