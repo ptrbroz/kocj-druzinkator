@@ -26,6 +26,8 @@ def vojtaToHistoryMatrix(filename, ignoreYears = 0):
         Array size [# of people, # of years]. Elements of array are zero if person was 
         not in a recognised company that year (or if their company is unknown).
         If an element is nonzero, person was in company whose index matches the element.
+    birthYearDict : dict
+        Dictionary mapping person names to birthyears (where known)
     """
     excel = load_workbook(filename=f"./{filename}")
     sheet = excel["STATISTIKA"]
@@ -41,6 +43,7 @@ def vojtaToHistoryMatrix(filename, ignoreYears = 0):
     COL_YEAR_LAST = len(rows[0]) - (3 + ignoreYears)
     COL_SURNAME = 0                     
     COL_NAME = 2                        
+    COL_BIRTHYEAR = 3
     ROW_PERSON_FIRST = 11
     ROW_PERSON_LAST = len(cols[0]) - 1
     YEARS_TOTAL = COL_YEAR_LAST - COL_YEAR_FIRST + 1
@@ -69,10 +72,14 @@ def vojtaToHistoryMatrix(filename, ignoreYears = 0):
                 historyMatrix[person, year] = result
 
     personNameList = []
+    birthYearDict = {}
     for i in range(PERSONS_TOTAL):
         joinedName = cols[COL_NAME][ROW_PERSON_FIRST+i] + " " + cols[COL_SURNAME][ROW_PERSON_FIRST+i]
         personNameList.append(joinedName)
         #ain't nobody got time for maiden names, sorry
+        birthYearFromVojta = cols[COL_BIRTHYEAR][ROW_PERSON_FIRST+i]
+        if isinstance(birthYearFromVojta, int):
+            birthYearDict[joinedName] = birthYearFromVojta
 
     #check for anomalies and log them
     incompleteYears = []
@@ -88,7 +95,7 @@ def vojtaToHistoryMatrix(filename, ignoreYears = 0):
 
     
 
-    return personNameList, historyMatrix
+    return personNameList, historyMatrix, birthYearDict
 
 def vojtaNameListToDict(personList : list[Person], vojtaNameList : list[str]) -> Dict[str, int]:
     """

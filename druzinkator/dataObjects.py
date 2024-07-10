@@ -6,7 +6,7 @@ class Person:
     Ocejak vulgaris taboritae. 
     """
 
-    def __init__(self, name, *atributes, presence = None, addTo : List = None):
+    def __init__(self, name, *atributes, presence = None, birthYear : int = None, addTo : List = None):
         """
         Params:
         ---------
@@ -18,11 +18,13 @@ class Person:
         presence : numpy array of 1s and 0s, length = 14
             optional (defaults to ones). 1 -> person is present on that day, 0-> not present
         addTo : list of Person.  Optional.  If specified, constructor appends newly created object to this list.
+        birthYear : year the person was born, defaults to unknown (None)
         Example:
             j = Person("Jan Tleskač", "jokerit", ("matfyz", 0.2))
             
         """
         self.name = name
+        self.birthYear = birthYear
         if presence is None:
             presence = np.ones(14)
         elif len(presence) != 14:
