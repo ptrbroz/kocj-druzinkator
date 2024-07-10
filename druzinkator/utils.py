@@ -19,7 +19,7 @@ def massAssign(persons, attribute):
     for person in persons:
         person.set(attribute)
 
-def spreadLoveAndHatred(pairs, persons, problem):
+def spreadLoveAndHatred(pairs, problem):
     for pair in pairs:
         romeo, juliet = pair
         problem.keepApart(romeo, juliet)
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     massAssign(personList, "nadčlověk")
 
     problem = Problem(personList)
-    spreadLoveAndHatred([(pb, jm), (kb, kbr)], personList, problem)
+    spreadLoveAndHatred([(pb, jm), (kb, kbr)], problem)
 
     print("\nMass assignment")
     for person in problem.personList:
