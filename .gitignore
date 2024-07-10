@@ -1,8 +1,9 @@
-#ignore downloaded copy of Vojta Ulehla's database
-tabory_ucastnici.xlsx
+#ignore dowloaded participation file, copy of Vojta Ulehla's database and any other xls
+*.xls
+*.xlsx
 
 #ignore .py files in root -- setups will be placed here
-*.py
+/*.py
 
 #ignore all .pkl files -- ie. saved setups and solutions
 **/*.pkl
@@ -10,3 +11,9 @@ tabory_ucastnici.xlsx
 #ignore weird cython stuff
 druzinkator/__pycache__/
 __pycache__/
+
+#ignore VS Code stuff
+.vscode
+
+#ignore venv
+venv
