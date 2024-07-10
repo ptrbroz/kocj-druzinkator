@@ -150,7 +150,6 @@ class Problem:
         self.CCPM = None
         self.attributeLimitsList = []
         self.personalCouplingList = []
-        self.companyFixDict = {}
 
         for i, person in enumerate(personList):
             self.personDict[person.name] = i

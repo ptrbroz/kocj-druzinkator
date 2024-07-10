@@ -51,7 +51,11 @@ def optimize(problem : Problem, oldAssignment : Assignment = None, maxtime = Non
         model.addCons(msums[i] == 1)
 
     #add constraints: persons which are already assigned in oldAssignment remain in their respective companies.
-
+    for j in range(personCount):
+        companyFix = problem.companyFixList[j]
+        if companyFix is not None:
+            model.addCons(MM[companyFix, j] == 1)   
+            print(f"NEWCONS MM @ {companyFix}, {j} == 1")
 
     #  precalculate attribute sum matrices
     ASM_list = []
