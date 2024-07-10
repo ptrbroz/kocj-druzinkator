@@ -34,7 +34,7 @@ class Person:
 
         for a in atributes:
             if(a == "human"):
-                raise Exception(f"Setting attribute 'human' is forbidden.  (Is automatically initialised to 1)")
+                raise Exception(f"Setting attribute 'human' is forbidden.  (It is automatically initialised to 1)")
             if isinstance(a, tuple):
                 self.dict[a[0]] = a[1]
             else:
@@ -167,6 +167,16 @@ class Problem:
         if index is None:
             return None
         return self.personList[index]
+
+    def fixCompanyForPerson(self, person : Person, company : int):
+        """
+        Adds a hard constraint that @person be placed in company number @company, if @person is part of this problem.
+        """
+        if company not in [0,1,2,3]:
+            raise Exception(f"Cannot fix {person.name}'s company to {company}.  Only company values {{0,1,2,3}} are allowed.")
+        index = self.personDict.get(person.name, None)
+        if index is not None:
+            self.companyFixList[index] = company
 
     def fixPeopleFromOldAssignment(self, peopleList : List[Person], oldAss : Assignment):
         """
