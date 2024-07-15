@@ -248,8 +248,65 @@ class Problem:
         else:
             self.personalCouplingList.append( (person1, person2, product) )
 
+    def report(self):
+        s = "Problem definition report:\n"
+        s += "------Attributes--------\n"
+        for attr in self.attributeList:
+            id = self.attributeDict[attr]
+            aaew = self.AAEweighs[id]
+            s += f"{attr}: aaew = {aaew}, limits = ["
+            commaFlag = 0
+            for tup in self.attributeLimitsList:
+                if tup[0] == id:
+                    if commaFlag:
+                        s+= ", "
+                    commaFlag = 1
+                    s += f"{tup}"
+            s += "]\n"
+        s += "------Free People-------\n"
+        freeList = []
+        fixedListOfLists = []
+        for i in range(4):
+            fixedListOfLists.append([])
+        for i, person in enumerate(self.personList):
+            if self.companyFixList[i] is None:
+                freeList.append(person.name)
+            else:
+                fixedListOfLists[self.companyFixList[i]].append(person.name)
 
+        s += "["
+        commaFlag = 0
+        for p in freeList:
+            if commaFlag:
+                s+=", "
+            commaFlag = 1
+            s+=p
+        s += "]\n"
+        s += "------Fixed People-------\n"
+        for i in range(4):
+            s+= f"C{i}: {fixedListOfLists[i]}\n"
 
+        kAList = []
+        kTList = []
+        for coupling in self.personalCouplingList:
+            cs = f"{coupling[0].name} - {coupling[1].name}"
+            if len(coupling) > 3:
+                cs += f" (soft : {coupling[3]})"
+            else:
+                cs += " (hard)"
+            if coupling[2] == 1:
+                kTList.append(cs)
+            else:
+                kAList.append(cs)
+
+        s += f"------Keep apart-----\n"
+        for cs in kAList:
+            s += f"{cs}\n"
+        s += f"------Keep together-----\n"
+        for cs in kTList:
+            s += f"{cs}\n"
+        s += "---------------------------"
+        return s
         
 if __name__ == "__main__":
     a = Person("Ales Jahoda", "fuj", "jokerit", ("kreten",0.1))
