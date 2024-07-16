@@ -1,5 +1,6 @@
 import click
 import numpy as np
+import pickle
 
 from druzinkator.dataObjects import *
 from druzinkator.matrixUtils import *
@@ -7,10 +8,11 @@ from druzinkator.optimize import optimize
 from druzinkator.visualize import visualizeAssignment
 
 @click.command()
-@click.option('-o', '--output', default = None, help = "If specified, saves problem and assignment to pickle at defined location")
+@click.option('-o', '--outpickle', default = None, help = "If specified, saves assignment to pickle at defined location")
+@click.option('-i', '--inpickle', default = None, help = "If specified, loads assignment from defined pickle and adds them as constraints.")
 @click.option('-v', '--vojtafile', default = "tabory_ucastnici.xlsx", help = "Vojta's excel file")
-@click.option('-t', '--maxtime', default = 60, help = "Maximum time to run the solver for (seconds).")
-def defineAndSolveProblem(output, vojtafile, maxtime):
+@click.option('-t', '--maxtime', default = None, help = "Maximum time to run the solver for (seconds).")
+def defineAndSolveProblem(outpickle, inpickle, vojtafile, maxtime):
 
     personList = []
 
@@ -32,7 +34,7 @@ def defineAndSolveProblem(output, vojtafile, maxtime):
     problem.keepApart(donkey, dragon)
 
     #parse vojta's excel
-    historyNameList, historyMatrix = vojtaToHistoryMatrix(vojtafile)
+    historyNameList, historyMatrix, _ = vojtaToHistoryMatrix(vojtafile)
     vojtaNameDict = vojtaNameListToDict(personList,historyNameList)
 
     #hand out novacek and potential rarasek attributes automatically based on vojta's excel
@@ -68,11 +70,21 @@ def defineAndSolveProblem(output, vojtafile, maxtime):
     if result is None:
         return
 
+
+
+    if  outpickle is not None:
+        if not outpickle.endswith(".pkl"):
+            outpickle += ".pkl"
+
+        with open(outpickle, 'wb') as file:
+            saveList = [problem, result]
+            pickle.dump(saveList, file)
+
+
+    print(problem.report())
+
     visualizeAssignment(result, problem)
 
-
-    if output:
-        print("Saving not yet implemented")
 
 
 
