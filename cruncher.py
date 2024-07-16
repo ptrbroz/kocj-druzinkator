@@ -1,7 +1,7 @@
 import click
 
 from openpyxl import load_workbook
-from utils import unicodeToVariableName
+from druzinkator.utils import unicodeToVariableName
 
 def dropRowsAfterFirstNone(matrix):
     resultMatrix = []
