@@ -35,28 +35,58 @@ def visualizeAssignment(assignment : Assignment, problem : Problem, attributeLis
         DSM_thiscomp, _ = calculateDailyMatrices(company, attributeList)
         companyDSMs.append(DSM_thiscomp)
 
+    lastI = len(attributeList) - 1
     for i, attribute in enumerate(attributeList):
         ax = attrAxs[i]
         for j in range(4):
             attrData = (companyDSMs[j])[i, :]
             ax.plot(tdays, attrData, '--', linewidth = 2, alpha = 0.8)
-            ax.set_xticks(tdays)
+        ax.set_xticks(tdays)
         ideal = DIM[i, :]
         ax.plot(tdays, ideal, linewidth = 3, alpha = 0.7)
 
         if i == 0:
             ax.legend(["C0", "C1", "C2", "C3", "Ideal"], loc = 'upper right')
 
+        if i != lastI:
+            empty_string_labels = ['']*len(tdays)
+            ax.set_xticklabels(empty_string_labels)
+        else:
+            week = ['po','ut','st','ct','pa','so','ne']
+            labels = ['so', 'ne']
+            labels.extend(week)
+            labels.extend(week)
+            labels = labels[:-2]
+            ax.set_xticklabels(labels)
+
+
         ax.set_ylabel(attribute)
         ax.grid()
 
+    attrFig.show()
+    plotCCPM(assignment, problem)
+    for i in range(4):
+        title = f"Co-Company Penalty Matrix for Company #{i}"
+        plotCCPM(assignment, problem, assignment.companies[i], title)
+    input()
 
+
+def plotCCPM(assignment : Assignment, problem : Problem, personList = None, title = None):
     #cocompany penalty matrix plot
 
     CCPMfig, ax = plt.subplots()
-    CCPMfig.suptitle("Co-Company Penalty Matrix")
 
-    personList = assignment.personList
+    if title is None:
+        CCPMfig.suptitle("Co-Company Penalty Matrix (Everyone)")
+    else:
+        CCPMfig.suptitle(title)
+
+    if personList is None:
+        personList = assignment.personList
+    CCPM = problem.CCPM
+
+    maxVal = CCPM.max()
+
     pcount = len(personList)
 
     griddingRange = list(range(pcount+1))
@@ -82,20 +112,24 @@ def visualizeAssignment(assignment : Assignment, problem : Problem, attributeLis
                 ax.fill_between([j, j+1], i, i+1, color='lightgray')
                 continue
 
-            ccp = CCPM[i,j]
             p1 = personList[i]
             p2 = personList[j]
+            
+            globalI = problem.personDict[p1.name]
+            globalJ = problem.personDict[p2.name]
+            ccp = CCPM[globalI,globalJ]
             textVal = f"{ccp:.1f}"
             
             #print(f"{p1.name} x {p2.name} -> {assignment.getCompanyByName(p1.name)} vs {assignment.getCompanyByName(p2.name)}")
 
             #sharedCompany = (assignment.getCompanyByName(p1.name) == assignment.getCompanyByName(p2.name))
-            sharedCompany = assignment.SCM[i,j]
+            sharedCompany = assignment.SCM[globalI,globalJ]
             
             if sharedCompany:
                 intersectionDays = np.sum(p1.presence * p2.presence)
                 if intersectionDays == 0:
-                    sharedCompany = False
+                    _ = 0
+                    #sharedCompany = False
                 else:
                     textVal += f"×{int(intersectionDays)}"
 
@@ -103,17 +137,18 @@ def visualizeAssignment(assignment : Assignment, problem : Problem, attributeLis
             if sharedCompany:
                 if ccp > 0:
                     #maybe todo: pass twice and change red hue depending on severity?
-                    color = (1, 0.5, 0.5)
+                    redBase = 0.5
+                    redAdditiveMax = 1 - redBase
+                    redAdd = redAdditiveMax*(ccp/maxVal)
+                    color = (redBase + redAdd, 0.3, 0.3)
                 else:
                     color = (0.8, 1, 0.7)
 
-            ax.text(j+0.5, i+0.5, textVal, va='center', ha='center', color='black', clip_on = True)
+            ax.text(j+0.5, i+0.5, textVal, va='center', ha='center', fontsize= 5, color='black', clip_on = True)
             ax.fill_between([j, j+1], i, i+1, color=color)
 
 
-    attrFig.show()
     CCPMfig.show()
-    input()
 
 
 

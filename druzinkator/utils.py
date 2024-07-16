@@ -17,9 +17,12 @@ def unicodeToVariableName(unicodeString):
     
     return validVariableName
 
-def massAssign(persons : List[Person], attribute : str):
+def massAssign(persons : List[Person], attribute : str, value = None):
     for person in persons:
-        person.set(attribute)
+        if value == None:
+            person.set(attribute)
+        else:
+            person.set(attribute, value)
 
 def spreadLoveAndHatred(pairs : List[Tuple[Person, Person]] , problem : Problem):
     """
@@ -80,6 +83,21 @@ def assignDiscreteDemographicParameters(people : List[Person], currentYear : int
 
     return binNames, binCounts
 
+def splitPopByAttribute(population : List[Person], attribute : str):
+    """
+    Returns two sublists of population -- first of persons who have
+    the specified attribute and another of persons who do not.
+    """
+    haves = []
+    havenots = []
+    for person in population:
+        if person.get(attribute):
+            haves.append(person)
+        else:
+            havenots.append(person)
+
+    return haves, havenots
+
 if __name__ == "__main__":
     name = "Příšernus Nejmus 7"
     varName = unicodeToVariableName(name)
@@ -104,3 +122,4 @@ if __name__ == "__main__":
     print("\nCouplings")
     for coupling in problem.personalCouplingList:
         print(coupling[0], coupling[1])
+
