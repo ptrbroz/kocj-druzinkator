@@ -186,7 +186,8 @@ def optimize(problem : Problem, oldAssignment : Assignment = None, maxtime = Non
 
     model.setObjective(objVar)
 
-    model.setParam('limits/time', maxtime)
+    if not (maxtime is None):
+        model.setParam('limits/time', maxtime)
 
     model.optimize()
 

@@ -258,6 +258,17 @@ def autoNovacek(personList : List[Person], historyMatrix : np.matrix, vojtaNameD
         person.set(novacekStr)
         print(f"{person.name} is a newbie")
 
+def autoJokerit(personList : List[Person]):
+    """
+    Blantantly assumes gender on the basis of presence or absence of the -ová / -ská suffix
+    Intended to be a first pass measure only, followed by manual assignment of missed genders.
+    """
+    for person in personList:
+        n = person.name
+        assumedF = n.endswith("ová") or n.endswith("ská")
+        if not assumedF:
+            person.set("jokerit")
+
 if __name__ == "__main__":
     log.basicConfig()
     log.getLogger().setLevel(log.DEBUG)
