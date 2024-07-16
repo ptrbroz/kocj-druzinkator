@@ -29,6 +29,8 @@ class Person:
             presence = np.ones(14)
         elif len(presence) != 14:
             raise Exception(f"Wrong length of supplied presence vector. Wanted 14, got {len(presence)}")
+        if isinstance(presence, List):
+            presence = np.array(presence)
         self.presence = presence.flatten()
         self.dict = {}
 
