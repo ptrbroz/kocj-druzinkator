@@ -209,7 +209,7 @@ def optimize(problem : Problem, oldAssignment : Assignment = None, maxtime = Non
     SCM_val = np.zeros((personCount,personCount), dtype=int)
     for i in range(personCount):
         for j in range(personCount):
-            SCM_val[i,j] = model.getVal(SCM[i,j])
+            SCM_val[i,j] = round(model.getVal(SCM[i,j]))
 
     result = Assignment(personList, MM_val, SCM_val)
 
