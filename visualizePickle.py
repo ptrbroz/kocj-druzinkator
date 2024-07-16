@@ -1,6 +1,6 @@
 import click
 import numpy as np
-import dill as pickle
+import pickle
 
 from druzinkator.dataObjects import *
 from druzinkator.matrixUtils import *
@@ -22,7 +22,7 @@ def visualizePickle(input):
     print(result)
     print(problem.attributeList)
 
-    input()
+    print(problem.report())
 
     visualizeAssignment(result, problem)
 

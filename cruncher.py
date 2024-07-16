@@ -29,7 +29,7 @@ def crunchPergler(inputfile, outputfile):
         for row in filteredRows:
             #debug output
             #print(f"{unicodeToVariableName(row[0])} = Person(\"{row[0]}\", presence = {[1 if element == 'ano' else 0 for element in row[2:17]]}, addTo=personList)")
-            file.write(f"{unicodeToVariableName(row[0])} = Person(\"{row[0]}\", presence = {[1 if element == 'ano' else 0 for element in row[2:17]]}, addTo=personList)\n")
+            file.write(f"{unicodeToVariableName(row[0])} = Person(\"{row[0]}\", presence = {[1 if element == 'ano' else 0 for element in row[2:16]]}, addTo=personList)\n")
 
     print("Moving south")
 
