@@ -32,9 +32,10 @@ class Person:
         if isinstance(presence, List):
             presence = np.array(presence)
         self.presence = presence.flatten()
+        self.presence = self.presence.astype(float)
         self.dict = {}
 
-        self.dict["human"] = 1
+        self.dict["human"] = 1.0
 
         for a in atributes:
             if(a == "human"):
@@ -42,7 +43,7 @@ class Person:
             if isinstance(a, tuple):
                 self.dict[a[0]] = a[1]
             else:
-                self.dict[a] = 1
+                self.dict[a] = 1.0
 
         if addTo is not None:
             addTo.append(self)
@@ -52,9 +53,9 @@ class Person:
         """
         Gets value of specified attribute (or 0 if that attribute is not present)
         """
-        return self.dict.get(attribute, 0)
+        return self.dict.get(attribute, 0.0)
 
-    def set(self, attribute, value=1):
+    def set(self, attribute, value=1.0):
         """
         Sets specified attribute to specified value (or to 1, if value is not supplied)
         """
