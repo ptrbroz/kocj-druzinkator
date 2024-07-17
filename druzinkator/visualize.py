@@ -124,12 +124,13 @@ def plotCCPM(assignment : Assignment, problem : Problem, personList = None, titl
 
             #sharedCompany = (assignment.getCompanyByName(p1.name) == assignment.getCompanyByName(p2.name))
             sharedCompany = assignment.SCM[globalI,globalJ]
+
+            dontMeet = 0
             
             if sharedCompany:
                 intersectionDays = np.sum(p1.presence * p2.presence)
                 if intersectionDays == 0:
-                    _ = 0
-                    #sharedCompany = False
+                    dontMeet = 1
                 else:
                     textVal += f"×{int(intersectionDays)}"
 
@@ -137,15 +138,20 @@ def plotCCPM(assignment : Assignment, problem : Problem, personList = None, titl
             if sharedCompany:
                 if ccp > 0:
                     #maybe todo: pass twice and change red hue depending on severity?
-                    redBase = 0.5
-                    redAdditiveMax = 1 - redBase
-                    redAdd = redAdditiveMax*(ccp/maxVal)
-                    color = (redBase + redAdd, 0.3, 0.3)
+                    norm = ccp/maxVal
+                    gb = 0.5
+                    bb = 0.5
+                    g = gb*(1-norm)
+                    b = bb*(1-norm)
+                    color = (1, g, b)
                 else:
                     color = (0.8, 1, 0.7)
 
-            ax.text(j+0.5, i+0.5, textVal, va='center', ha='center', fontsize= 5, color='black', clip_on = True)
+            ax.text(j+0.5, i+0.5, textVal, va='center', ha='center', fontsize= 7, color='black', clip_on = True)
             ax.fill_between([j, j+1], i, i+1, color=color)
+
+            if dontMeet:
+                ax.fill_between([j+0.1, j+0.9], i+0.1, i+0.9, color='white')
 
 
     CCPMfig.show()
