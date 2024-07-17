@@ -98,6 +98,23 @@ def splitPopByAttribute(population : List[Person], attribute : str):
 
     return haves, havenots
 
+def getPeopleAlreadyPlacedByDay(population : List[Person], day):
+    """
+    Returns a sublist of @population containing those persons who are present on @day or before
+    """
+
+    retVal = []
+
+    for person in population:
+        d = 0
+        while d <= day:
+            if person.presence[d] > 0:
+                retVal.append(person)
+                break
+            d += 1
+
+    return retVal
+
 if __name__ == "__main__":
     name = "Příšernus Nejmus 7"
     varName = unicodeToVariableName(name)
