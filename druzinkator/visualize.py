@@ -64,11 +64,46 @@ def visualizeAssignment(assignment : Assignment, problem : Problem, attributeLis
         ax.grid()
 
     attrFig.show()
-    plotCCPM(assignment, problem)
+    #plotCCPM(assignment, problem) #dont plot the big ccpm,
     for i in range(4):
         title = f"Co-Company Penalty Matrix for Company #{i}"
         plotCCPM(assignment, problem, assignment.companies[i], title)
+
+    for i in range(4):
+        plotCompanyMembersDays(assignment.companies[i], title= f"Presence for company #{i}" )
+
     input()
+
+
+def plotCompanyMembersDays(persons: List[Person], title = ""):
+
+    fig, ax = plt.subplots()
+
+    #plt.figure(figsize=(10, len(persons) * 0.5))  # Adjusting the figure size for better readability
+
+    persons = sorted(persons, key = lambda p : sum(p.presence))
+
+    for idx, person in enumerate(persons):
+        presence = person.presence
+        for day, present in enumerate(presence):
+            color = 'green' if present else 'red'
+            ax.scatter(day+1, idx, color=color, s=100)  # s controls the size of the markers
+
+    ax.set_title(title)
+    ax.set_yticks(range(len(persons)), [person.name for person in persons])
+
+    week = ['po','ut','st','ct','pa','so','ne']
+    labels = ['so', 'ne']
+    labels.extend(week)
+    labels.extend(week)
+    labels = labels[:-2]
+    tdays = np.linspace(1,14,14)
+
+    ax.set_xticks(tdays)
+    ax.set_xticklabels(labels)
+
+    ax.grid(True)
+    fig.show()
 
 
 def plotCCPM(assignment : Assignment, problem : Problem, personList = None, title = None):
