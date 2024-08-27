@@ -26,24 +26,32 @@ def crunchPergler(inputfile, outputfile):
 
     print("Attending Moták")
     with open(outputfile, 'w', encoding="utf-8") as file:
+
+        maxNameLen = max([len(row[0]) for row in filteredRows]) 
+        maxNameLen += 2 #add some slack in case longest name needs to be edited to a longer, Vojta-compatible version
+
         for row in filteredRows:
-            #debug output
-            #print(f"{unicodeToVariableName(row[0])} = Person(\"{row[0]}\", presence = {[1 if element == 'ano' else 0 for element in row[2:17]]}, addTo=personList)")
 
-            lineString = f"{unicodeToVariableName(row[0])} = Person(\"{row[0]}\", presence = ["
-            attendanceVector = [1 if element == 'ano' else 0 for element in row[2:16]]
+            lineString = f"{unicodeToVariableName(row[0])} = Person(\"{row[0]}\","
+            
+            #add padding to align presenceVectors
+            diff = maxNameLen - len(row[0])
+            lineString += 2*diff*" "
 
+            lineString += " presence = ["
+
+            presenceVector = [1 if element == 'ano' else 0 for element in row[2:16]]
             kozlikPoints = [2, 7, 9]   # indices preceded by Kozlík-style weekend separators
-            for i in range(len(attendanceVector)):
+            for i in range(len(presenceVector)):
                 if i:
                     if i in kozlikPoints:
                         lineString += ",   "
                     else:
                         lineString += ", "
 
-                lineString += f"{attendanceVector[i]}"
+                lineString += f"{presenceVector[i]}"
 
-            lineString += "], addTo=personList)\n"
+            lineString += "],   addTo=personList)\n"
 
             file.write(lineString)
 
