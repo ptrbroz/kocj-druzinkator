@@ -1,0 +1,170 @@
+\documentclass[11pt]{article}
+
+\usepackage{sectsty}
+\usepackage{graphicx}
+\usepackage{titlepic}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{amsfonts}
+\usepackage{hyperref}
+
+
+\usepackage{amsmath}
+\usepackage[bb=dsserif]{mathalpha}
+\usepackage{bm}
+
+% Margins
+\topmargin=-0.45in
+\evensidemargin=0in
+\oddsidemargin=0in
+\textwidth=6.5in
+\textheight=9.0in
+\headsep=0.25in
+
+\title{Družinkátor math documentation}
+\author{Petr Brož}
+\date{\today}
+\titlepic{\includegraphics[width=\textwidth]{figures/retinue.eps}}
+ 
+\begin{document}
+\maketitle	
+\pagebreak
+
+% Optional TOC
+% \tableofcontents
+% \pagebreak
+
+%--Paper--
+
+\section{Intro (What even is this?)}
+
+Družinkátor is a tool for finding optimal placement of the KOČJ summer camp (TOČJ from now on) attendees into companies.
+This is achieved by solving a mixed integer program (MIP) with PySCIPOpt\footnote{https://github.com/scipopt/PySCIPOpt}.
+
+For now, the purpose of this file is mainly to describe the formulation of this MIP, not to provide documentation of Družinkátor's functions, since the 
+author (foolishly) believes the comments within the code to be sufficient.
+
+\section{Problem statement}
+
+Each attendee of TOČJ must be placed into exactly one of four companies.  This assignment is fixed for the whole duration of the camp.  Not all attendees are
+present for the full duration -- they might for example only partake in the first or second week of the camp. \\
+
+Three main objectives are pursued when deciding the placement of people:
+
+\begin{itemize}
+    \item 
+    \textbf{Respecting incompatibilities:}\\
+    Some people should not be placed together in the same company, e.g. siblings or romantically involved couples.
+
+    \item
+    \textbf{Balancing companies:}\\
+    The companies should be balanced in their manpowers, so as to make competition between the companies more practical.  It is also desirable to spread
+    other characteristics or skills evenly between the companies -- e.g., if 4 students of Matfyz attend the camp, it is better to spread them 1-1-1-1 than
+    to jam them all into one company\footnote{
+    This balancing act should be viewed on a day by day basis, taking into account the different attendances of individual people.  If we want balanced
+    competition on monday, then the companies should be balanced on monday, etc.}.
+
+    \item
+    \textbf{Interannual mixing:}\\
+    For veterans attending for multiple years, an attempt should be made to vary whom they share companies with.  E.g., if person A and person B were placed 
+    in the same company last year and the year before that, we should try not to place them in the same company this year.
+\end{itemize}
+
+
+\section{Mixed integer program formulation}
+
+SCIPopt expects a MIP formulated as
+
+\begin{equation}
+\begin{alignedat}{2}
+\underset{\mathbf{x}}{\text{min}} \quad & f(\mathbf{x})  \\ 
+\text{s.t.} \quad & g_i(\mathbf{x}) \leq 0  &&\forall i \in I\\
+& l_j \leq x_j \leq u_j \quad &&\forall j \in J \\
+& x_k \in \mathbb{Z} &&\forall k \in K
+\end{alignedat}
+\tag{MIP formulation}
+\label{MIP}
+\end{equation}
+
+where $f(\mathbf{x})$ and $g_i(\mathbf{x})$ are (nonlinear) functions of the vector of all optimization variables $\mathbf{x}$ and $J,K$ are subsets of 
+the set containing all indices of $x$.  
+
+\subsection{Membersip variables}
+
+Let's begin by modelling the assignment of people into companies.  The \emph{membership} optimization variables, arranged 
+into the membership matrix $M$, take care of that.
+
+$M$ is a $4\times{}p$ matrix where $p$ is the total number of people attending TOČJ.  Each column then represents one person.  Membership variable $M_{i,j}$
+represents the truth value of the statement "Person $j$ is assigned to company $i$."  For example, if $M$ took the following form:
+
+\[
+M = \begin{pmatrix}
+1 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 0 & 0 & 0 \\
+0 & 0 & 0 & 1 & 1 & 1 \\
+0 & 1 & 1 & 0 & 0 & 0
+\end{pmatrix},
+\]
+
+\noindent then that would represent the situation where person 0 is placed in company 0, persons 1 and 2 are placed in company 3 and the rest in company 2, with
+company 1 having no members.
+
+To ensure that each person is placed into exactly one company, following constraints are placed on the variables:
+
+\begin{alignat}{2}
+    &M_{i,j} \in \mathbb{Z} \quad \quad &&\forall i, j. \label{integerReq} \\
+    0 \leq &M_{i,j} \leq 1 &&\forall i, j. \\
+    \mathbb{1}^{T}_4 \cdot &M = \mathbb{1}^{T}_p,
+\end{alignat}
+
+where $\mathbb{1}_n$ is a column vector of ones of length $n$.
+
+The $M_{i,j}$ variables are the crucial ones -- although more optimization variables are introduced later, the solution of the optimization problem is 
+fully captured in the values of $M_{i,j}$.  
+
+Note that constraint \ref{integerReq} is what turns this problem from what would otherwise be a tame quadratic program into a MIP.
+
+\subsection{Cost function}
+
+The function $f$ from \ref{MIP}, which will be minimized by the solver, consists of 3 terms:
+
+\begin{equation}
+    f = AAE_{sum} + CCP_{sum} + SP_{sum}.
+\end{equation}
+
+How the terms come about will be elaborated later.  $AAE$ stands for Absolute Attribute Error -- this term penalizes imbalance between the companies.  $CCP$
+stands for Co-Company Penalty, and the second term penalizes lack of interannual mixing.  $SP$ stands for Soft Penalty and the last term penalises violations
+of soft constraints.
+
+\subsection{Shared Company Matrix}
+
+To aid in formulating further parts of the problem, I introduce the Shared Company Matrix, or $SCM$ for short.  $SCM$ is a $p\times{}p$ matrix, where 
+$SCM_{i,j}$ is equal to 1 if persons $i$ and $j$ are placed in the same company and 0 if they are not.  This is achieved by setting
+
+\begin{equation}
+    SCM_{i,j} = \mathbb{1}^{T}_4 \cdot 
+    (
+        \begin{pmatrix}
+        M_{0,i} \\
+        M_{1,i} \\
+        M_{2,i} \\
+        M_{3,i} \\
+    \end{pmatrix}
+\odot
+    \begin{pmatrix}
+    M_{0,j} \\
+    M_{1,j} \\
+    M_{2,j} \\
+    M_{3,j} \\
+    \end{pmatrix}
+    ),
+\end{equation}
+
+where $\odot$ denotes an elementwise multiplication.
+
+\subsection{Modelling incompatibilities}
+
+To tackle t
+
+
+\end{document}
