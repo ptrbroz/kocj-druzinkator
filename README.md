@@ -2,7 +2,7 @@
 
 ## Installation
 
-Get a conda environment (I used miniforge conda) set up, see requirements.txt file (not tested but I assume it will work, as I generated it with "conda list -e")
+Get a conda environment (using miniforge conda.  Regular conda does not work.) set up, see requirements.txt file (not tested but I assume it will work, as I generated it with "conda list -e")
 
 Download a copy of Vojta's Excellent Excel file (tabory_ucastnici.xlsx) to root of this repo.
 
