@@ -87,7 +87,7 @@ SCIPopt expects a MIP formulated as
 \end{equation}
 
 where $f(\mathbf{x})$ and $g_i(\mathbf{x})$ are (nonlinear) functions of the vector of all optimization variables $\mathbf{x}$ and $J,K$ are subsets of 
-the set containing all indices of $x$.  
+the set containing all indices of $\mathbf{x}$.  
 
 \subsection{Membersip variables}
 
@@ -137,7 +137,7 @@ stands for Co-Company Penalty, and the second term penalizes lack of interannual
 of soft constraints.
 
 \subsection{Shared Company Matrix}
-
+\label{SCM}
 To aid in formulating further parts of the problem, I introduce the Shared Company Matrix, or $SCM$ for short.  $SCM$ is a $p\times{}p$ matrix, where 
 $SCM_{i,j}$ is equal to 1 if persons $i$ and $j$ are placed in the same company and 0 if they are not.  This is achieved by setting
 
@@ -160,11 +160,23 @@ $SCM_{i,j}$ is equal to 1 if persons $i$ and $j$ are placed in the same company 
     ),
 \end{equation}
 
-where $\odot$ denotes an elementwise multiplication.
+where $\odot$ denotes elementwise multiplication.
 
-\subsection{Modelling incompatibilities}
+\subsection{Handling incompatibilities}
 
-To tackle t
+Introducing a constraint in the form $SCM_{i,j} = 0$ ensures that $i$th and $j$th person will not be placed together in the same company.  Setting the right
+side to 1 would instead require that they be placed in the same company.
+
+Alternatively, those limitations can be formulated as soft constraints -- in that case, the penalty for violating such soft constraint is addded to $SC_{sum}$.
+
+
+
+\subsection{Balancing companies}
+
+
+
+
+
 
 
 \end{document}
