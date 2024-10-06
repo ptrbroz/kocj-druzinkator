@@ -38,7 +38,7 @@
 
 \section{Intro (What even is this?)}
 
-Družinkátor is a tool for finding optimal placement of the KOČJ summer camp (TOČJ from now on) attendees into companies.
+Družinkátor is a tool for finding optimal placement of the Czech language olympiad summer camp (TOČJ from now on) attendees into companies.
 This is achieved by solving a mixed integer program (MIP) with PySCIPOpt\footnote{https://github.com/scipopt/PySCIPOpt}.
 
 For now, the purpose of this file is mainly to describe the formulation of this MIP, not to provide documentation of Družinkátor's functions, since the 
@@ -114,10 +114,10 @@ To ensure that each person is placed into exactly one company, following constra
 \begin{alignat}{2}
     &M_{i,j} \in \mathbb{Z} \quad \quad &&\forall i, j. \label{integerReq} \\
     0 \leq &M_{i,j} \leq 1 &&\forall i, j. \\
-    \mathbb{1}^{T}_4 \cdot &M = \mathbb{1}^{T}_p,
+    \mathbb{1}^{T} \cdot &M = \mathbb{1}^{T},
 \end{alignat}
 
-where $\mathbb{1}_n$ is a column vector of ones of length $n$.
+where $\mathbb{1}_n$ is a column vector of ones.
 
 The $M_{i,j}$ variables are the crucial ones -- although more optimization variables are introduced later, the solution of the optimization problem is 
 fully captured in the values of $M_{i,j}$.  
@@ -142,7 +142,7 @@ To aid in formulating further parts of the problem, I introduce the Shared Compa
 $SCM_{i,j}$ is equal to 1 if persons $i$ and $j$ are placed in the same company and 0 if they are not.  This is achieved by setting
 
 \begin{equation}
-    SCM_{i,j} = \mathbb{1}^{T}_4 \cdot 
+    SCM_{i,j} = \mathbb{1}^{T} \cdot 
     (
         \begin{pmatrix}
         M_{0,i} \\
@@ -167,15 +167,34 @@ where $\odot$ denotes elementwise multiplication.
 Introducing a constraint in the form $SCM_{i,j} = 0$ ensures that $i$th and $j$th person will not be placed together in the same company.  Setting the right
 side to 1 would instead require that they be placed in the same company.
 
-Alternatively, those limitations can be formulated as soft constraints -- in that case, the penalty for violating such soft constraint is addded to $SC_{sum}$.
+Alternatively, those limitations can be formulated as soft constraints -- in that case, the penalty for violating such soft constraint is addded to $SP_{sum}$.
 
 
 
 \subsection{Balancing companies}
 
+Now comes the meat of the optimization problem, so to speak.  Each person is endowed with certain attributes.  Many different traits can be modeled by
+assigning attributes to people: being a person (modelled by the "human" attribute automatically assigned to everyone), having a mathematical education (the 
+"matfyz" attribute), H-index, profficiency in piloting hot air ballons...  Attributes (apart from "human") are not hardcoded in Družinkátor, rather,
+they are assigned as part of the problem definition for a specific year.  Attributes are assumed to be non-negative\footnote{This describes the assumption I 
+held while writing the program.  I'm not certain that negative attribute values would actually break anything -- but I definitely didn't consider them, so
+if you do introduce them, you'll be doing so at your own peril.}, but they need not take integer values -- you could have a "half-matfyz", for example.
 
+Persons contribute all of their attributes to the company they are assigned to, but only on days on which they are present.  The goal of
+balancing companies with respect to a given attribute is understood as the following problem:
 
+\begin{equation}
+\text{min} \quad  \sum_{d=0}^{13} \sum_{i=0}^3 w_{attr}(d)\cdot{}\left|(\sum_{p\in{C_i}}p.attr\cdot{}p.pres(d)) - \frac{1}{4}(\sum_{p\in{}P} p.attr\cdot{}p.pres(d))\right|,
+\label{eq:min_AAE_simple}
+\end{equation}
 
+where $d$ is the day index, $i$ is the company index, $w_{attr}(d)$ is a daily attribute optimization weigh, $C_i$ is the set of all persons placed in company $i$,
+$P$ is the set of all persons, $p.attr$ is the value of the given attribute possessed by person $p$ and $p.pres(d)$ is 1 if person $p$ is present on
+day $d$, 0 otherwise.
+
+In other words -- ideally, I want each company to have exactly one fourth of the total value of given attribute on each day.  Equation \ref{eq:min_AAE_simple} only
+deals with a single attribute -- and so will the rest of this section, as balancing for multiple attributes is done by simply repeating the steps that will
+be described for each of them.
 
 
 
