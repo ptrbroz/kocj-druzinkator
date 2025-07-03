@@ -15,10 +15,13 @@ def dropRowsAfterFirstNone(matrix):
 @click.command()
 @click.option('-i', '--inputFile', default = "ucast.xlsx", help = "If specified, loads presence file from the specified path.")
 @click.option('-o', '--outputFile', default = "exampleGenerated.py", help = "If specified, saves generated file to given location.")
-def crunchPergler(inputfile, outputfile):
+@click.option('-c', '--firstDataColumn', default = 3, help = "Index of first column that contains presence data. The column corresponding to first saturday.")
+@click.option('-s', '--sheetName', default = "Data", help = "Name of excel sheet to be used.")
+def crunchPergler(inputfile, outputfile, firstdatacolumn, sheetname):
     print("Growing long hair")
+    print(f"Opening {inputfile}, sheet name {sheetname}")
     excel = load_workbook(filename=f"./{inputfile}")
-    sheet = excel["Data"]
+    sheet = excel[sheetname]
 
     cols = [[cell.value for cell in column] for column in sheet.columns]
     rows = [[cell.value for cell in row   ] for row    in sheet.rows   ]
@@ -40,7 +43,7 @@ def crunchPergler(inputfile, outputfile):
 
             lineString += " presence = ["
 
-            presenceVector = [1 if element == 'ano' else 0 for element in row[2:16]]
+            presenceVector = [1 if element == 'ano' else 0 for element in row[firstdatacolumn:firstdatacolumn+14]]
             kozlikPoints = [2, 7, 9]   # indices preceded by Kozlík-style weekend separators
             for i in range(len(presenceVector)):
                 if i:
