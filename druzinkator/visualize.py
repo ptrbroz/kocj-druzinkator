@@ -6,6 +6,45 @@ from typing import List
 from .matrixUtils import *
 from .dataObjects import Person, Assignment
 
+def getTotalPenalties(assignment, problem):
+    """
+    Return a list of floats in order of problem.personList, where each float is the sum of penalties incurred by that person due to CCPM.
+    """
+    plist = problem.personList
+    pcount = len(plist)
+
+    output = [0.0] * pcount
+    thisSum = 0.0
+
+    CCPM = problem.CCPM
+
+    for i in range(pcount):
+        for j in range(pcount):
+            if i == j:
+                continue #no penalty for being (with) yourself
+
+            p1 = plist[i]
+            p2 = plist[j]
+            
+            globalI = problem.personDict[p1.name]
+            globalJ = problem.personDict[p2.name]
+            ccp = CCPM[globalI,globalJ]
+            sharedCompany = assignment.SCM[globalI,globalJ]
+            
+            if not sharedCompany:
+                continue
+
+            intersectionDays = np.sum(p1.presence * p2.presence)
+            thisSum += intersectionDays * ccp
+
+
+        output[i] = thisSum
+        thisSum = 0.0
+
+    return output
+
+
+
 def visualizeAssignment(assignment : Assignment, problem : Problem, attributeList = None):
     """
     Visualizes supplied assignment and problem.
@@ -19,6 +58,15 @@ def visualizeAssignment(assignment : Assignment, problem : Problem, attributeLis
     print(f"Taking into account attributes {attributeList}")
     print("Visualizing following assignment:")
     print(assignment)
+    print("-------")
+
+    penaltyList = getTotalPenalties(assignment, problem)
+    penaltySum = sum(penaltyList) / 2 # value is doubled due to relation being binary, thus division
+    worstIndex = penaltyList.index(max(penaltyList))
+
+    print(f"Total co-company penalty: {penaltySum}")
+    print(f"Worst (or tied): {problem.personList[worstIndex].name} : {penaltyList[worstIndex]}")
+
 
     #prep DIM
     DSM, _ = calculateDailyMatrices(assignment.personList, attributeList)
