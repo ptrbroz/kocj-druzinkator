@@ -120,7 +120,9 @@ def plotCCPM(assignment : Assignment, problem : Problem, personList = None, titl
         personList = assignment.personList
     CCPM = problem.CCPM
 
-    maxVal = CCPM.max()
+
+    # calculate maxVal -- worst possible penalty that can me incurred between two persons.
+    maxVal = CCPM.max() * 14.0
 
     pcount = len(personList)
 
@@ -169,13 +171,15 @@ def plotCCPM(assignment : Assignment, problem : Problem, personList = None, titl
                 else:
                     textVal += f"×{int(intersectionDays)}"
 
+            penalty = ccp*intersectionDays
+            textVal = f"{penalty:.1f}\n({textVal})" 
+
             color = 'white'
             if sharedCompany:
                 if ccp > 0:
-                    #maybe todo: pass twice and change red hue depending on severity?
-                    norm = ccp/maxVal
-                    gb = 0.5
-                    bb = 0.5
+                    norm = penalty/maxVal
+                    gb = 0.8
+                    bb = 0.8
                     g = gb*(1-norm)
                     b = bb*(1-norm)
                     color = (1, g, b)
