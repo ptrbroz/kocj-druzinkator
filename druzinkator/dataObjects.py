@@ -235,21 +235,33 @@ class Problem:
         """
         Sets a constraint requiring that specified persons share a company.
         """
+        print(f"Adding keepTogether: {person1.name} - {person2.name}")
         product = 1
         if soft:
             self.personalCouplingList.append( (person1, person2, product, softPenalty) )
         else:
             self.personalCouplingList.append( (person1, person2, product) )
 
-    def keepApart(self, person1 : Person, person2 : Person, soft = False, softPenalty = 100):
+    def keepApart(self, person1 : Person, person2 : Person, soft = False, softPenalty = 100, forceIfDisjoint = False):
         """
         Sets a constraint requiring that specified persons be placed in different companies.
+        By default, this constraint is ignored if the two persons don't share any days (and therefore won't meet).
+        To override this behaviour, set the forceIfDisjoint flag to true.
         """
-        product = 0
-        if soft:
-            self.personalCouplingList.append( (person1, person2, product, softPenalty) )
+
+        intersectionDays = np.sum(person1.presence * person2.presence)
+        epsilon = 0.5 # to avoid comparing zero and float trouble
+
+        if forceIfDisjoint or intersectionDays >= epsilon:
+            print(f"Adding keepApart: {person1.name} - {person2.name}")
+            product = 0
+            if soft:
+                self.personalCouplingList.append( (person1, person2, product, softPenalty) )
+            else:
+                self.personalCouplingList.append( (person1, person2, product) )
         else:
-            self.personalCouplingList.append( (person1, person2, product) )
+            print(f"IGNORING KeepApart due to disjoint presence: {person1.name} - {person2.name}")
+
 
     def report(self):
         s = "Problem definition report:\n"
