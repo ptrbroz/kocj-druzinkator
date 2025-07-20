@@ -121,6 +121,14 @@ class Assignment:
         for i in range(4):
             s += f"Company {i} : {[person.name for person in self.companies[i]]}\n\r"
 
+        s += "---First day----\n\r"
+        for i in range(4):
+            firstDayList = []
+            for person in self.companies[i]:
+                if person.presence[0]:
+                    firstDayList.append(person.name)
+            s += f"c{i}_first_day = {firstDayList}\n\r"
+
         return s
 
 
