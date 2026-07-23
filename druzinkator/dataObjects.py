@@ -160,9 +160,11 @@ class Problem:
         self.attributeList = []
         self.attributeDict = {}
         self.AAEweighs = []
+        self.dayAgnosticAAEweights = []
         self.CCPM = None
         self.attributeLimitsList = []
         self.personalCouplingList = []
+        self.dayAgnosticAttributeLimitsList = []
 
         for i, person in enumerate(personList):
             self.personDict[person.name] = i
@@ -173,6 +175,7 @@ class Problem:
             self.attributeDict[attr] = len(self.attributeList)
             self.attributeList.append(attr)
             self.AAEweighs.append(None)
+            self.dayAgnosticAAEweights.append(None)
         #print(f"regAtt: {attr}, gotten = {gotten}.  {self.attributeList}")
 
     def getPersonByName(self, name : str):
@@ -208,7 +211,7 @@ class Problem:
         """
         self.CCPM = CCPM
 
-    def setAttributeErrorWeigh(self, attribute : str, dailyWeighVector : np.array):
+    def setAttributeErrorWeight(self, attribute : str, dailyWeighVector : np.array):
         """
         Set weighs for penalizing Absolute Attribute Error of specified attribute.
         You probably want to set this for attribute "human" at the very least.
@@ -219,6 +222,21 @@ class Problem:
         """
         self.__registerAttribute(attribute)
         self.AAEweighs[self.attributeDict[attribute]] = dailyWeighVector.flatten()
+        
+    def setAttributeErrorWeigh(self, attribute : str, dailyWeighVector : np.array):
+        """
+        This is a function alias to keep backwards compatibility that would be broken by fixing the typo in the original function's name.
+        """
+        self.setAttributeErrorWeight(attribute, dailyWeighVector)
+
+    def setDayAgnosticAttributeErrorWeight(self, attribute : str, weigh : float):
+        """
+        Set weigh for penalizing day-agnostic absolute attribute error of specified attribute.
+        This is similar to setAttributeErrorWeight(), except that the attribute error is calculated purely on the basis of all members of
+        the company, irrespective of their presence -- looking just at the list of the members of a given company.
+        """
+        self.__registerAttribute(attribute)
+        self.dayAgnosticAAEweights[self.attributeDict[attribute]] = weigh
 
     def addAttributeLimits(self, attribute : str, min = -np.inf, max = np.inf, soft = False, softPenalty = 100, enableVector = np.ones((1,14))):
         """
@@ -238,6 +256,19 @@ class Problem:
             limitTuple = (self.attributeDict[attribute], min, max, enableVector.flatten())
             self.attributeLimitsList.append(limitTuple)
 
+    def addDayAgnosticAttributeLimits(self, attribute : str, min = -np.inf, max = np.inf, soft = False, softPenalty = 100):
+        """
+        Adds (inclusive) limits for sum of defined attribute to problem constraints.
+        Works similarly to addAttributeLimits(), with the difference that this calculates the attribute limit across all members of
+        the company, irrespective of their presence.
+        """
+        self.__registerAttribute(attribute)
+        if soft:
+            limitTuple = (self.attributeDict[attribute], min, max, softPenalty)
+            self.dayAgnosticAttributeLimitsList.append(limitTuple)
+        else:
+            limitTuple = (self.attributeDict[attribute], min, max)
+            self.dayAgnosticAttributeLimitsList.append(limitTuple)
 
     def keepTogether(self, person1 : Person, person2 : Person, soft = False, softPenalty = 100):
         """

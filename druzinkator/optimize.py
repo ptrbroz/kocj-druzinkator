@@ -27,10 +27,13 @@ def optimize(problem : Problem, oldAssignment : Assignment = None, maxtime = Non
     attributeDict = problem.attributeDict
 
     attributeLimits = problem.attributeLimitsList
+    agnosticAttributeLimits = problem.dayAgnosticAttributeLimitsList
 
     personalCouplingList = problem.personalCouplingList
 
     weightsList = problem.AAEweighs
+    agnosticWeightsList = problem.dayAgnosticAAEweights
+
     CCPM = problem.CCPM
 
     DSM, DAM_list = calculateDailyMatrices(personList, attributeList)
@@ -126,7 +129,85 @@ def optimize(problem : Problem, oldAssignment : Assignment = None, maxtime = Non
 
                     softPenaltySum += (s1 + s2) * softWeight
 
+    # --------------------------------
+    # Day-agnostic section
+    # --------------------------------
 
+    print("Agnostic section opt setup")
+
+    agnosticMatrixList = calculateAgnosticMatrix(personList, attributeList)
+
+    #prep agnostic attribute sums
+    agnosticAttributeSumList = []
+    for i, AM in enumerate(agnosticMatrixList):
+        AASM = MM @ AM
+        agnosticAttributeSumList.append(AASM)
+
+    # Agnostic absolute attribute errors
+    agnosticAAEsum = 0
+
+    for i, AM in enumerate(agnosticMatrixList):
+
+        if agnosticWeightsList[i] is None:
+            print(f"Skipping agnostic balance in {problem.attributeList[i]}.")
+            continue
+
+
+        # find ideal day-agnostic count of attribute per company as 1/4th of total of that attribute across all people in personList.
+        idealCount = np.sum(AM) / 4
+        print(f"Ideal agnostic count of {problem.attributeList[i]} is {idealCount}")
+
+        idealRepeated = np.ones((4,1)) * idealCount
+        
+        aAEM = agnosticAttributeSumList[i] - idealRepeated
+
+        # introduce absolute attribute error variable
+        aAAEM = np.empty((4,1), dtype=pyscipopt.Variable)
+        for compI in range(4):
+            aAAEM[compI, 0] = model.addVar(name = f"agn_abs_err_{attributeList[i]}_{compI}")
+            # enforce absolute value via constraints
+            model.addCons(    aAEM[compI, 0] <= AAEM[compI, 0])
+            model.addCons(-1* aAEM[compI, 0] <= AAEM[compI, 0])
+
+        addendum = (np.ones((1,4))*agnosticWeightsList[i]) @ aAAEM 
+
+        agnosticAAEsum += addendum
+
+
+    agnosticSoftPenaltySum = 0
+
+    #  Agnostic ATTRIBUTE LIMITS
+    for limitTuple in agnosticAttributeLimits:
+        print(limitTuple)
+        attrId = limitTuple[0]
+        min = limitTuple[1]
+        max = limitTuple[2]
+
+        softWeight = None       
+        if len(limitTuple) > 3:
+            softWeight = limitTuple[3]
+
+        AASM = agnosticAttributeSumList[attrId]
+
+        for compId in range(4):
+            compSum = AASM[compId, 0]
+            if softWeight is None:
+                #add hard constraints
+                model.addCons(compSum >= min)
+                model.addCons(compSum <= max)
+            else:
+                #add soft constraints
+                s1 = model.addVar(name = f"Slack", vtype = 'C')
+                s2 = model.addVar(name = f"Slack", vtype = 'C')
+
+                model.addCons(compSum + s1 >= min)
+                model.addCons(compSum - s2 <= max)
+
+                agnosticSoftPenaltySum += (s1 + s2) * softWeight
+    
+
+
+    # ------ Agnostic section end ---
 
     #  SHARED COMPANY MATRIX
     #       used for tracking whether two persons are assigned to the same company this year.
@@ -179,7 +260,12 @@ def optimize(problem : Problem, oldAssignment : Assignment = None, maxtime = Non
 
     # -------------------------------------------
 
-    cost = AAEsum + CCPsum + softPenaltySum
+    print("Assembling cost")
+
+    # some fugly unwrapping needs to happen here, maybe TODO: go back up and rewrite the 
+    agnosticAAEsum = agnosticAAEsum[0][0]
+
+    cost = AAEsum + CCPsum + softPenaltySum + agnosticAAEsum + agnosticSoftPenaltySum
 
     objVar = model.addVar(name = "objectiveVariable")
     model.addCons(objVar >= cost)

@@ -211,6 +211,26 @@ def calculateDailyMatrices(personList : List[Person], attributeList : List[str])
 
     return DSM, DAM_list
     
+def calculateAgnosticMatrix(personList : List[Person], attributeList : List[str]):
+    """
+    Returns a variant of DAM_list (see calculateDailyMatrices()) that would be gotten if camp lasted one day and everyone in personList attended on that day.
+    """
+    vl = []
+    for p in personList:
+        vl.append([1.])     #simulate one day presence
+    DPM = np.block(vl)
+
+    DAM_list = []
+    for attr in attributeList:
+        DAM = DPM.copy()
+        DAM_list.append(DAM)
+        for i,p in enumerate(personList):
+            aval = p.get(attr)
+            DAM[i] *= aval
+
+    return DAM_list
+
+
 
 def autoRarasek(personList : List[Person], historyMatrix : np.matrix, vojtaNameDict : Dict[str, int], requiredYears = 2, requiredPresence = 13, rarasekStr = "rarasek"):
     """

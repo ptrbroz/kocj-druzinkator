@@ -66,6 +66,31 @@ def visualizeAssignment(assignment : Assignment, problem : Problem, attributeLis
 
     print(f"Total co-company penalty: {penaltySum}")
     print(f"Worst (or tied): {problem.personList[worstIndex].name} : {penaltyList[worstIndex]}")
+        
+
+    print("------ Agnostic matters -------")
+    attrIdealAgnosticValueList = []
+    attrActualAgnosticTuplesList = []
+
+    for attr in attributeList:
+        # determine ideal agnostic count
+        tempSum = 0
+        for person in problem.personList:
+            tempSum += person.get(attr)
+        idealCount = tempSum / 4
+        attrIdealAgnosticValueList.append(idealCount)
+
+        # calculate actual counts that happen in this assignment
+        valsInComps = []
+        for i in range(4):
+            tempSum = 0
+            for person in assignment.companies[i]:
+                tempSum += person.get(attr)
+            valsInComps.append(tempSum)
+
+        attrActualAgnosticTuplesList.append((valsInComps[0], valsInComps[1], valsInComps[2], valsInComps[3]))
+
+        print(f"{attr} : Ideal agnostic count {idealCount}, actual values: {valsInComps}")
 
 
     #prep DIM
