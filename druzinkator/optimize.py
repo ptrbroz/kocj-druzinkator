@@ -146,6 +146,8 @@ def optimize(problem : Problem, oldAssignment : Assignment = None, maxtime = Non
     # Agnostic absolute attribute errors
     agnosticAAEsum = 0
 
+    agnosticAAEsumWasUsedFlag = False
+
     for i, AM in enumerate(agnosticMatrixList):
 
         if agnosticWeightsList[i] is None:
@@ -172,6 +174,7 @@ def optimize(problem : Problem, oldAssignment : Assignment = None, maxtime = Non
         addendum = (np.ones((1,4))*agnosticWeightsList[i]) @ aAAEM 
 
         agnosticAAEsum += addendum
+        agnosticAAEsumWasUsedFlag = True
 
 
     agnosticSoftPenaltySum = 0
@@ -262,8 +265,9 @@ def optimize(problem : Problem, oldAssignment : Assignment = None, maxtime = Non
 
     print("Assembling cost")
 
-    # some fugly unwrapping needs to happen here, maybe TODO: go back up and rewrite the 
-    agnosticAAEsum = agnosticAAEsum[0][0]
+    if agnosticAAEsumWasUsedFlag:
+        # some fugly unwrapping needs to happen here, maybe TODO: go back up and rewrite the 
+        agnosticAAEsum = agnosticAAEsum[0][0]
 
     cost = AAEsum + CCPsum + softPenaltySum + agnosticAAEsum + agnosticSoftPenaltySum
 
